@@ -26,7 +26,7 @@ chooseNumber <- function(observed, truth, max.rank=50)
     denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var)
     
     # Applying parallel analysis.
-    parallel <- parallelPCA(observed, BPPARAM=MulticoreParam(3), value="n", approximate=TRUE, min.rank=1, max.rank=max.rank)
+    parallel <- parallelPCA(observed, BPPARAM=MulticoreParam(3), value="n", threshold=0.05, approximate=TRUE, min.rank=1, max.rank=max.rank)
 
     # Using the Marchenko-Pastur limit on the _eigenvalues_.
     # (See https://www.wolfram.com/language/11/random-matrices/marchenko-pastur-distribution.html?product=mathematica)
@@ -43,11 +43,28 @@ chooseNumber <- function(observed, truth, max.rank=50)
     lambda <- sqrt( 2 * (beta + 1) + (8 * beta) / ( beta + 1 + sqrt(beta^2 + 14 * beta + 1) ) )
     gv <- sum(SVD$d > lambda * sqrt(n) * sqrt(mean(tech.comp)))
 
-    # Determining the MSE at each step.
+    # Detecting the elbow in a scree plot, based on distance from the line.
+    v2last <- c(max.rank - 1L, prog.var[max.rank] - prog.var[1])
+    v2last <- v2last/sqrt(sum(v2last^2))
+    v2other <- rbind(seq_len(max.rank) - 1L, prog.var[1:max.rank] - prog.var[1])
+    dist2point <- sqrt(colSums((v2other - outer(v2last, colSums(v2last * v2other)))^2))
+    elbow <- which.max(dist2point)
+
+    # Using Seurat's Jackstraw method, keeping up to the first PC with zero genes at a FDR of 5%.
+    colnames(observed) <- paste0("Gene", seq_len(ncol(observed)))
+    Seu <- CreateSeuratObject(observed)
+    Seu@scale.data <- observed
+    Seu <- RunPCA(Seu, pc.genes=rownames(observed))
+    Seu <- JackStraw(Seu)
+    nsig <- colSums(apply(Seu@dr$pca@jackstraw@emperical.p.value, 2, p.adjust, method="BH") <= 0.05)
+    jackstraw <- min(c(max.rank, which(nsig==0)-1L))
+
+    # Determining the MSE at each number of components. 
     mse <- computeMSE(SVD, center, truth, ncomponents=max.rank)
     optimal <- which.min(mse)
 
-    return(list(MSE=mse, retained=data.frame(denoised=denoised, parallel=parallel, marchenko=marchenko, gavish=gv, optimal=optimal)))
+    return(list(MSE=mse, 
+        retained=data.frame(elbow=elbow, parallel=parallel, marchenko=marchenko, gavish=gv, jackstraw=jackstraw, denoised=denoised, optimal=optimal)))
 }
 
 runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
