@@ -1,7 +1,5 @@
 # Setting up a function that decides how many PCs to remove.
 
-library(scran)
-
 computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     running <- 0
     collected <- numeric(ncomponents)
@@ -26,6 +24,7 @@ chooseNumber <- function(observed, truth, max.rank=50)
     denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var)
     
     # Applying parallel analysis.
+    require(scran)
     parallel <- parallelPCA(observed, BPPARAM=MulticoreParam(3), value="n", threshold=0.05, approximate=TRUE, min.rank=1, max.rank=max.rank)
 
     # Using the Marchenko-Pastur limit on the _eigenvalues_.
@@ -51,7 +50,9 @@ chooseNumber <- function(observed, truth, max.rank=50)
     elbow <- which.max(dist2point)
 
     # Using Seurat's Jackstraw method, keeping up to the first PC with zero genes at a FDR of 5%.
-    colnames(observed) <- paste0("Gene", seq_len(ncol(observed)))
+    require(Seurat)
+    rownames(observed) <- paste0("Gene", seq_len(nrow(observed)))
+    colnames(observed) <- paste0("Cell", seq_len(ncol(observed)))
     Seu <- CreateSeuratObject(observed)
     Seu@scale.data <- observed
     Seu <- RunPCA(Seu, pc.genes=rownames(observed))
@@ -63,15 +64,18 @@ chooseNumber <- function(observed, truth, max.rank=50)
     mse <- computeMSE(SVD, center, truth, ncomponents=max.rank)
     optimal <- which.min(mse)
 
-    return(list(MSE=mse, 
-        retained=data.frame(elbow=elbow, parallel=parallel, marchenko=marchenko, gavish=gv, jackstraw=jackstraw, denoised=denoised, optimal=optimal)))
+    num.pcs <- c(elbow=elbow, parallel=parallel, marchenko=marchenko, gavish=gv, jackstraw=jackstraw, denoised=denoised, optimal=optimal)
+    cur.mse <- mse[num.pcs]
+    names(cur.mse) <- names(num.pcs)
+    return(list(number=num.pcs, mse=cur.mse))
 }
 
 runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
 # A convenience function to run simulations based on a function that generates a matrix of true signal.
 {
-    fname <- paste0(prefix, ".txt")
-    statistics <- list()
+    scn.fname <- paste0(prefix, "_scenarios.txt")
+    npc.fname <- paste0(prefix, "_numbers.txt")
+    mse.fname <- paste0(prefix, "_mse.txt")
     counter <- 1L
 
     if (is.null(observed.FUN)) {
@@ -91,26 +95,18 @@ runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
                     y <- observed.FUN(truth)
                     out <- chooseNumber(y, truth)
 
-                    if (it==1L) {
-                        cur.stats <- out$MSE
-                        cur.retained <- out$retained
-                    } else {
-                        cur.stats <- cur.stats + out$MSE
-                        cur.retained <- cur.retained + out$retained
-                    }
+                    is.first <- counter==1L && it==1L
+                    write.table(data.frame(Ncells=ncells, Ngenes=ngenes, Prop.DE=affected),
+                        file=scn.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+                    write.table(data.frame(rbind(out$number)), file=npc.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+                    write.table(data.frame(rbind(out$mse)), file=mse.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
                 }
 
-                is.first <- counter==1L
-                write.table(data.frame(Ncells=ncells, Ngenes=ngenes, Prop.DE=affected, cur.retained/iters), 
-                    file=fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
-
-                statistics[[counter]] <- cur.stats/iters
                 counter <- counter + 1L
             }
         }
     }
 
-    saveRDS(file=paste0(prefix, ".rds"), statistics)
     return(NULL)
 }
 
