@@ -38,13 +38,15 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE)
     ndf <- nrow(observed) - 1
     limit <- qmp(1, ndf=ndf, pdim=ncol(observed)) * mean(tech.comp)
     marchenko <- sum(SVD$d^2/ndf > limit)
+    marchenko <- max(1L, marchenko)
 
     # Applying the Gavish-Donoho method, setting the noise 'sigma' at the square root of the mean technical component.
     m <- min(dim(observed))
     n <- max(dim(observed))
     beta <- m/n
     lambda <- sqrt( 2 * (beta + 1) + (8 * beta) / ( beta + 1 + sqrt(beta^2 + 14 * beta + 1) ) )
-    gv <- max(1L, sum(SVD$d > lambda * sqrt(n) * sqrt(mean(tech.comp))))
+    gv <- sum(SVD$d > lambda * sqrt(n) * sqrt(mean(tech.comp)))
+    gv <- max(1L, gv)
 
     # Detecting the elbow in a scree plot, based on distance from the line.
     v2last <- c(max.rank - 1L, prog.var[max.rank] - prog.var[1])
@@ -61,8 +63,10 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE)
     Seu <- ScaleData(Seu, do.scale=FALSE)
     Seu <- RunPCA(Seu, pc.genes=rownames(observed), seed.use=NULL, pcs.compute=max.rank)
     Seu <- JackStraw(Seu)
+
     nsig <- colSums(apply(Seu@dr$pca@jackstraw@emperical.p.value, 2, p.adjust, method="BH") <= 0.05)
     jackstraw <- min(c(max.rank, which(nsig==0)-1L))
+    jackstraw <- max(1L, jackstraw)
 
     # Determining the MSE at each number of components. 
     mse <- computeMSE(SVD, center, truth, ncomponents=max.rank)
