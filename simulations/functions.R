@@ -88,7 +88,7 @@ runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
         }
     }
 
-    for (ncells in c(200, 1000)) {
+    for (ncells in c(200, 1000, 5000)) {
         for (ngenes in c(1000, 5000)) {
             for (affected in c(0.2, 0.5, 1)) { 
                 cur.mse <- cur.retained <- NULL 
@@ -97,7 +97,7 @@ runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
                     truth <- truth.FUN(ngenes*affected, ncells)
                     truth <- rbind(truth, matrix(0, ncol=ncells, nrow=(1-affected)*ngenes))
                     y <- observed.FUN(truth)
-                    out <- chooseNumber(y, truth)
+                    out <- chooseNumber(y, truth, approximate=any(dim(y)>1000))
 
                     is.first <- counter==1L && it==1L
                     write.table(data.frame(Ncells=ncells, Ngenes=ngenes, Prop.DE=affected),
