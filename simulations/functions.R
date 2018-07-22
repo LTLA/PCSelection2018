@@ -10,18 +10,22 @@ computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     return(collected)
 }
 
-chooseNumber <- function(observed, truth, max.rank=50)
+chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE)
 # Assessing each strategy to choose the number of PCs.
 { 
     center <- rowMeans(observed)
-    SVD <- svd(t(observed - center), nu=max.rank, nv=max.rank)
+    if (approximate) {
+        SVD <- irlba::irlba(t(observed), center=center, nv=max.rank)
+    } else {
+        SVD <- svd(t(observed - center), nu=max.rank, nv=max.rank)
+        SVD$d <- SVD$d[seq_len(max.rank)]            
+    }
     prog.var <- SVD$d^2 / (ncol(observed) - 1) 
-    total.var <- sum(prog.var)
 
     # Using our denoising approach.
     tech.comp <- apply(observed - truth, 1, var)
     tech.var <- sum(tech.comp)
-    denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var)
+    denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var, total=sum(matrixStats::rowVars(observed)))
     
     # Applying parallel analysis.
     require(scran)
@@ -40,12 +44,12 @@ chooseNumber <- function(observed, truth, max.rank=50)
     n <- max(dim(observed))
     beta <- m/n
     lambda <- sqrt( 2 * (beta + 1) + (8 * beta) / ( beta + 1 + sqrt(beta^2 + 14 * beta + 1) ) )
-    gv <- sum(SVD$d > lambda * sqrt(n) * sqrt(mean(tech.comp)))
+    gv <- max(1L, sum(SVD$d > lambda * sqrt(n) * sqrt(mean(tech.comp))))
 
     # Detecting the elbow in a scree plot, based on distance from the line.
     v2last <- c(max.rank - 1L, prog.var[max.rank] - prog.var[1])
     v2last <- v2last/sqrt(sum(v2last^2))
-    v2other <- rbind(seq_len(max.rank) - 1L, prog.var[1:max.rank] - prog.var[1])
+    v2other <- rbind(seq_along(prog.var) - 1L, prog.var - prog.var[1])
     dist2point <- sqrt(colSums((v2other - outer(v2last, colSums(v2last * v2other)))^2))
     elbow <- which.max(dist2point)
 
@@ -55,7 +59,7 @@ chooseNumber <- function(observed, truth, max.rank=50)
     colnames(observed) <- paste0("Cell", seq_len(ncol(observed)))
     Seu <- CreateSeuratObject(observed)
     Seu <- ScaleData(Seu, do.scale=FALSE)
-    Seu <- RunPCA(Seu, pc.genes=rownames(observed), seed.use=NULL)
+    Seu <- RunPCA(Seu, pc.genes=rownames(observed), seed.use=NULL, pcs.compute=max.rank)
     Seu <- JackStraw(Seu)
     nsig <- colSums(apply(Seu@dr$pca@jackstraw@emperical.p.value, 2, p.adjust, method="BH") <= 0.05)
     jackstraw <- min(c(max.rank, which(nsig==0)-1L))
