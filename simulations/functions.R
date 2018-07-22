@@ -151,6 +151,7 @@ generateReal <- function(original, SVD, center, nrank=20) {
     list(truth=recon, observed=resim) 
 }
 
+#' Execute PC selection methods on the simulated data based on real data.
 simulateReal <- function(original, prefix, iters=10) {
     sim.vals <- decomposer(original, approximate=TRUE, nrank=50)
     scn.fname <- paste0(prefix, "_scenarios.txt")
@@ -160,13 +161,15 @@ simulateReal <- function(original, prefix, iters=10) {
 
     for (recon.rank in c(10, 20, 30)) {
         for (it in seq_len(iters)) {
-            sim <- simulateReal(original, sim.vals$SVD, sim.vals$center, recon.rank)
+            sim <- generateReal(original, sim.vals$SVD, sim.vals$center, recon.rank)
             out <- chooseNumber(sim$observed, sim$truth, approximate=TRUE)
 
             is.first <- counter==1L && it==1L
             write.table(data.frame(Rank=recon.rank), file=scn.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
             write.table(data.frame(rbind(out$number)), file=npc.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
             write.table(data.frame(rbind(out$mse)), file=mse.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+
+            gc()
         }
         counter <- counter + 1L
     }

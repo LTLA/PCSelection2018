@@ -14,7 +14,7 @@ sbatch << EOT
 #SBATCH -o logs/out-pbmc4k
 #SBATCH -e logs/err-pbmc4k
 #SBATCH -n 1
-#SBATCH --mem 16000
+#SBATCH --mem 32000
 
 echo 'source("run_pbmc4k.R")' | ${R} --slave --vanilla
 EOT
