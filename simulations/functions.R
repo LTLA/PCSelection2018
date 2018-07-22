@@ -134,7 +134,7 @@ addNoise <- function(variance) {
         }
     } else if (variance=="high") {
         function(truth) {
-            sd <- sqrt(runif(nrow(truth), 0, 6))
+            sd <- sqrt(rgamma(nrow(truth), 0.2, 0.2)) 
             truth + rnorm(length(truth), sd=sd)
         }
     } else {
