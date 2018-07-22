@@ -1,5 +1,16 @@
-# Setting up a function that decides how many PCs to remove.
+#' Central function for SVD.
+decomposer <- function(y, nrank, approximate=FALSE) {
+    center <- rowMeans(y)
+    if (approximate) {
+        SVD <- irlba::irlba(t(y), center=center, nv=nrank)
+    } else {
+        SVD <- svd(t(y - center), nu=nrank, nv=nrank)
+        SVD$d <- SVD$d[seq_len(nrank)]            
+    }
+    list(SVD=SVD, center=center)
+}
 
+#' Computing the MSE for any number of components for a given SVD.
 computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     running <- 0
     collected <- numeric(ncomponents)
@@ -10,20 +21,15 @@ computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     return(collected)
 }
 
-chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE)
-# Assessing each strategy to choose the number of PCs.
-{ 
-    center <- rowMeans(observed)
-    if (approximate) {
-        SVD <- irlba::irlba(t(observed), center=center, nv=max.rank)
-    } else {
-        SVD <- svd(t(observed - center), nu=max.rank, nv=max.rank)
-        SVD$d <- SVD$d[seq_len(max.rank)]            
-    }
+#' Assessing each strategy to choose the number of PCs.
+chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) { 
+    dec.out <- decomposer(observed, nrank=max.rank, approximate=approximate)
+    SVD <- dec.out$SVD
+    center <- dec.out$center
     prog.var <- SVD$d^2 / (ncol(observed) - 1) 
 
     # Using our denoising approach.
-    tech.comp <- apply(observed - truth, 1, var)
+    tech.comp <- rowMeans((observed - truth)^2)
     tech.var <- sum(tech.comp)
     denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var, total=sum(matrixStats::rowVars(observed)))
     
@@ -78,9 +84,8 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE)
     return(list(number=num.pcs, mse=cur.mse))
 }
 
-runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
-# A convenience function to run simulations based on a function that generates a matrix of true signal.
-{
+#' A convenience function to run simulations based on a function that generates a matrix of true signal.
+runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL) {
     scn.fname <- paste0(prefix, "_scenarios.txt")
     npc.fname <- paste0(prefix, "_numbers.txt")
     mse.fname <- paste0(prefix, "_mse.txt")
@@ -118,9 +123,8 @@ runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL)
     return(NULL)
 }
 
-addNoise <- function(variance) 
-# Adding noise with different strategies, with different variation of technical noise across genes.
-{
+#' Adding noise with different strategies, with different variation of technical noise across genes.
+addNoise <- function(variance) {
     if (variance=="none") {
         function(truth) truth + rnorm(length(truth))
     } else if (variance=="moderate") {
@@ -136,4 +140,36 @@ addNoise <- function(variance)
     } else {
         stop("unknown variance mode")
     }
+}
+
+#' Generate a low-rank "truth" and flip the sign of the residuals to create the "observed" matrix.
+generateReal <- function(original, SVD, center, nrank=20) {
+    i <- seq_len(nrank)
+    recon <- t(SVD$u[,i,drop=FALSE] %*% (SVD$d[i] * t(SVD$v[,i,drop=FALSE]))) + center
+    resid <- abs(original - recon)
+    resim <- recon + resid * sample(c(-1, 1), length(resid), replace=TRUE)
+    list(truth=recon, observed=resim) 
+}
+
+simulateReal <- function(original, prefix, iters=10) {
+    sim.vals <- decomposer(original, approximate=TRUE, nrank=50)
+    scn.fname <- paste0(prefix, "_scenarios.txt")
+    npc.fname <- paste0(prefix, "_numbers.txt")
+    mse.fname <- paste0(prefix, "_mse.txt")
+    counter <- 1L
+
+    for (recon.rank in c(10, 20, 30)) {
+        for (it in seq_len(iters)) {
+            sim <- simulateReal(original, sim.vals$SVD, sim.vals$center, recon.rank)
+            out <- chooseNumber(sim$observed, sim$truth, approximate=TRUE)
+
+            is.first <- counter==1L && it==1L
+            write.table(data.frame(Rank=recon.rank), file=scn.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+            write.table(data.frame(rbind(out$number)), file=npc.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+            write.table(data.frame(rbind(out$mse)), file=mse.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
+        }
+        counter <- counter + 1L
+    }
+
+    return(NULL)
 }
