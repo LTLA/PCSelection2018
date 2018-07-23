@@ -125,7 +125,7 @@ We demonstrate that the strategies used in existing scRNA-seq analysis software 
 The scree plot displays the percentage of variance explained by successive PCs.
 (We will denote the variance explained by PC $k$ as $\sigma^2_k$, where $\sigma^2_k > \sigma^2_{k+1}$.)
 Here, the aim is to visually detect the difference between early PCs that capture structure and later PCs that capture random noise.
-A sharp drop from the $k$\textsuperscript{th} to $(k+1)$\textsuperscript{th} PC suggests that most of the structure is captured in the first $k$ PCs.
+A sharp drop from the $k$\textsuperscript{th} to $(k+1)$\textsuperscript{th} PC suggests that most of the structure is captured in the first $k$ PCs \cite{cattell1966scree}.
 This manifests as an ``elbow'' in the scree plot at $k$, after which there is a plateau in the percentage of variance explained.
 To detect the elbow, we consider a line connecting the first and $n$\textsuperscript{th} PCs, using $n=50$ by default.
 The elbow -- and the number of PCs to retain -- is defined as the point on the curve in the scree plot that has the largest perpendicular distance to the line.
