@@ -148,11 +148,11 @@ We use the 95\textsuperscript{th} percentile, which yields a more conservative e
 \subsection{The Marchenko-Pastur law}
 The Marchenko-Pastur law \cite{marchenko1967distribution} specifies the asymptotic distribution of singular values for a large random matrix with independent identically distributed (i.i.d.) entries.
 This distribution has a strict upper bound that could be used as a threshold on the number of PCs to retain \cite{shekhar2016comprehensive}.
-To justify this, we assume that our input matrix can be written as $Y = T + X$, where $T$ is a $r$-rank matrix of true signal and $X$ is a matrix of i.i.d.\ noise.
-We further assume that the first $r$ eigenvectors of the covariance matrix are exactly linear combinations of the $r$ basis vectors of $T$,
-i.e., the additional noise due to $X$ does not affect the identification of the true basis vectors.
-This means that, once the first $r$ eigenvectors are regressed out of $Y$, the residual matrix is equal to $X$.
-Thus, we should take all PCs with singular values greater than the Marchenko-Pastur limit for $X$.
+To justify this, we assume that our input matrix can be written as $\mathbf{Y} = \mathbf{T} + \mathbf{X}$, where $\mathbf{T}$ is a $r$-rank matrix of true signal and $\mathbf{X}$ is a matrix of i.i.d.\ noise.
+We further assume that the first $r$ rotation vectors are exactly linear combinations of the $r$ basis vectors of $\mathbf{T}$,
+i.e., the additional noise due to $\mathbf{X}$ does not affect the identification of the true basis vectors.
+This means that the difference between $\mathbf{Y}$ and the low-rank approximation derived from the first $r$ PCs will be equal to $\mathbf{X}$.
+Thus, we should take all PCs with singular values greater than the Marchenko-Pastur limit for $\mathbf{X}$.
 
 In practice, the limit needs to be adjusted to account for the magnitude of the noise.
 This is most simply achieved by scaling the limit by the standard deviation of the noise, 
