@@ -165,8 +165,7 @@ This yields a combined $p$-value representing the evidence against the global nu
 i.e., that it is not significantly associated with any features.
 We then retain PCs up to the first PC that accepts the global null at a error threshold of 0.05.
 We note that a variety of other strategies can be used to consolidate multiple $p$-values into a single decision.
-However, simes' method is appealing as it is somewhat robust to correlations between features \cite{sarkar1997simes}, 
-which weakens the assumption of independence between features.
+However, Simes' method is appealing as it is robust to correlations between features \cite{sarkar1997simes}.
 
 \subsection{Summation of technical components}
 The \code{denoisePCA} function in the \textit{scran} package \cite{lun2016stepbystep} defines the number of PCs to retain based on the total technical noise in the input data.
