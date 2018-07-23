@@ -99,6 +99,25 @@ Aaron Lun\textsuperscript{1,*}
 \end{flushleft}
 
 \section{Background}
+Principal components analysis (PCA) \cite{pearson1901lines,hotelling1933analysis} is widely used for dimensionality reduction in a variety of scientific fields including single-cell RNA sequencing (scRNA-seq) data analysis.
+PCA constructs new variables -- i.e., principal components (PCs) -- that are linear functions of the original features, successively maximize variance, and are uncorrelated with each other \cite{jolliffe2016principal}.
+The first few PCs explain the most variance in the data and are used as a proxy for the original data set in exploratory analysis.
+By compressing the input data into a low-dimensional space, PCA removes much of the random high-dimensional noise and reduces the size of the data.
+This improves the resolution of interesting signal (e.g., subpopulations or trajectories in scRNA-seq data) as well as the efficiency of downstream procedures like clustering and visualization.
+
+Practitioners will typically use the first $k$ PCs to obtain a low-dimensional approximation of the original data.
+As earlier PCs explain a greater proportion of the variance, taking the first $k$ PCs provides the most effective compression while preserving as much information as possible.
+However, the question becomes: what is the best choice of $k$?
+If too few PCs are used, we may discard some relevant signal that is only captured in later PCs.
+On the other hand, if too many PCs are used, we introduce unnecessary noise and offset the benefits of using PCA in the first place.
+Deciding how many PCs to retain is a long-standing topic of study \cite{howard1963empirical,zwick1986comparison},
+and depends on whether the aim is to recover the true rank of the signal matrix \cite{zwick1986comparison};
+to minimize error compared to the true signal \cite{gavish2014optimal};
+or to obtain components that are easily interpreted \cite{franklin1995parallel}.
+
+In this report, we explore a number of computational methods for choosing the number of PCs to retain in scRNA-seq data.
+We use a variety of simulations to evaluate different methods in terms of their ability to remove noise and recover the true biological signal.
+We demonstrate that the strategies used in existing scRNA-seq analysis software are suboptimal but robust and largely effective.
 
 \section{A brief review of some PC selection methods}
 
@@ -182,6 +201,7 @@ though in practice, $l$ will be lower than the rank of the matrix containing the
 Furthermore, we only use features where the total variance is greater than the estimated technical component.
 This ensures that there is some $l \in [1, N]$ that satisfies the above inequality.
 
+\section{Assessing on reconstruction accuracy}
 
 \bibliography{ref}
 \bibliographystyle{unsrt}
