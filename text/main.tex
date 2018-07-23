@@ -1,0 +1,189 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[top=0.85in,left=2.75in,footskip=0.75in,marginparwidth=2in]{geometry}
+
+% use Unicode characters - try changing the option if you run into troubles with special characters (e.g. umlauts)
+\usepackage[utf8]{inputenc}
+
+% clean citations
+\usepackage{cite}
+
+% hyperref makes references clicky. use \url{www.example.com} or \href{www.example.com}{description} to add a clicky url
+\usepackage{nameref,hyperref}
+
+% line numbers
+\usepackage[right]{lineno}
+
+% improves typesetting in LaTeX
+\usepackage{microtype}
+\DisableLigatures[f]{encoding = *, family = * }
+
+% text layout - change as needed
+\raggedright
+\setlength{\parindent}{0.5cm}
+\textwidth 5.25in 
+\textheight 8.75in
+
+% Remove % for double line spacing
+%\usepackage{setspace} 
+%\doublespacing
+
+% use adjustwidth environment to exceed text width (see examples in text)
+\usepackage{changepage}
+
+% adjust caption style
+\usepackage[aboveskip=1pt,labelfont=bf,labelsep=period,singlelinecheck=off]{caption}
+
+% remove brackets from references
+\makeatletter
+\renewcommand{\@biblabel}[1]{\quad#1.}
+\makeatother
+
+% headrule, footrule and page numbers
+\usepackage{lastpage,fancyhdr,graphicx}
+\usepackage{epstopdf}
+\pagestyle{myheadings}
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\thepage/\pageref{LastPage}}
+\renewcommand{\footrule}{\hrule height 2pt \vspace{2mm}}
+\fancyheadoffset[L]{2.25in}
+\fancyfootoffset[L]{2.25in}
+
+% use \textcolor{color}{text} for colored text (e.g. highlight to-do areas)
+\usepackage{color}
+
+% define custom colors (this one is for figure captions)
+\definecolor{Gray}{gray}{.25}
+
+% this is required to include graphics
+\usepackage{graphicx}
+
+% use if you want to put caption to the side of the figure - see example in text
+\usepackage{sidecap}
+
+% use for have text wrap around figures
+\usepackage{wrapfig}
+\usepackage[pscoord]{eso-pic}
+\usepackage[fulladjust]{marginnote}
+\reversemarginpar
+
+% Adding multirow.
+\usepackage{multirow}
+
+% Other required things:
+\usepackage{color}
+\usepackage{subcaption}
+\captionsetup[subfigure]{justification=centering}
+\usepackage{amsmath}
+\newcommand\code[1]{{\small\texttt{#1}}}
+
+% document begins here
+\begin{document}
+\vspace*{0.35in}
+
+% title goes here:
+\begin{flushleft}
+{\Large
+    \textbf\newline{Choosing the number of principal components for denoising single-cell RNA sequencing data}
+}
+\newline
+
+% authors go here:
+%\\
+Aaron Lun\textsuperscript{1,*}
+\\
+\bigskip
+\bf{1} Cancer Research UK Cambridge Institute, University of Cambridge, Li Ka Shing Centre, Robinson Way, Cambridge CB2 0RE, United Kingdom \\
+\bigskip
+
+\end{flushleft}
+
+\section{Background}
+
+\section{A brief review of some PC selection methods}
+
+\subsection{Elbow detection}
+The scree plot displays the percentage of variance explained by successive PCs.
+(We will denote the variance explained by PC $k$ as $\sigma^2_k$, where $\sigma^2_k > \sigma^2_{k+1}$.)
+Here, the aim is to visually detect the difference between early PCs that capture structure and later PCs that capture random noise.
+A sharp drop from the $k$\textsuperscript{th} to $(k+1)$\textsuperscript{th} PC suggests that most of the structure is captured in the first $k$ PCs.
+This manifests as an ``elbow'' in the scree plot at $k$, after which there is a plateau in the percentage of variance explained.
+To detect the elbow, we consider a line connecting the first and $n$\textsuperscript{th} PCs, using $n=50$ by default.
+The elbow -- and the number of PCs to retain -- is defined as the point on the curve in the scree plot that has the largest perpendicular distance to the line.
+This algorithm is relatively robust compared to methods that rely on derivatives.
+
+\subsection{Parallel analysis}
+Horn's parallel analysis \cite{horn1965rationale} involves permuting all observations for each feature of the input matrix and performing PCA on this permuted matrix.
+This yields a variance explained $\omega^2_k$ for the $k$\textsuperscript{th} PC.
+Any PC with a $\sigma^2_k$ (from the original input matrix) comparable to $\omega^2_k$ is considered to be uninteresting, 
+as the PC explains no more variance than expected under a random model containing no structure. 
+One can visualize this strategy by considering a scree plot and discarding all PCs past the first intersection of the curves for the variances explained from the original and permuted PCAs.
+
+Several definitions of ``comparable'' can be used to define the first uninteresting PC.
+The simplest is to remove all PCs past and including the first PC where $\sigma^2_k < \omega^2_k$.
+However, this retains too many PCs in noisy datasets where the original and permuted variance-explained curves are similar and intersect slowly.
+Another solution is to repeat the permutations many times, and define the threshold as an upper quantile of $\omega^2_k$ for each $k$ \cite{buja1992remarks}.
+A PC with $\sigma^2_k$ below this quantile is considered to be feasibly sampled from the distribution of $\omega^2_k$ under a random model, and is subsequently discarded.
+We use the 95\textsuperscript{th} percentile, which yields a more conservative estimate of the number of PCs.
+
+\subsection{The Marchenko-Pastur law}
+The Marchenko-Pastur law \cite{marchenko1967distribution} specifies the asymptotic distribution of singular values for a large random matrix with independent identically distributed (i.i.d.) entries.
+This distribution has a strict upper bound that could be used as a threshold on the number of PCs to retain \cite{shekhar2016comprehensive}.
+To justify this, we assume that our input matrix can be written as $Y = T + X$, where $T$ is a $r$-rank matrix of true signal and $X$ is a matrix of i.i.d.\ noise.
+We further assume that the first $r$ eigenvectors of the covariance matrix are exactly linear combinations of the $r$ basis vectors of $T$,
+i.e., the additional noise due to $X$ does not affect the identification of the true basis vectors.
+This means that, once the first $r$ eigenvectors are regressed out of $Y$, the residual matrix is equal to $X$.
+Thus, we should take all PCs with singular values greater than the Marchenko-Pastur limit for $X$.
+
+In practice, the limit needs to be adjusted to account for the magnitude of the noise.
+This is most simply achieved by scaling the limit by the standard deviation of the noise, 
+which is itself estimated by modelling technical variation in the space of the input data \cite{lun2016stepbystep}.
+An alternative approach is to fit the Marchenko-Pastur distribution to the observed set of singular values for the input matrix \cite{shekhar2016comprehensive},
+adjusting for scaling differences between the observed and theoretical distributions.
+However, this requires a complete singular value decomposition (SVD) of the input matrix.
+This is time-consuming as it precludes the use of approximate SVD algorithms, so we will not consider it here.
+
+\subsection{The Gavish-Donoho method}
+Gavish and Donoho \cite{gavish2014optimal} describe a method for determining the optimal threshold for the singular values.
+They consider a matrix containing both true signal and i.i.d.\ noise with a constant standard deviation. 
+By using only the first $k$ PCs that have singular values above the optimal threshold, 
+we can minimize the mean-squared error (MSE) of the low-rank approximation of the input matrix to the true signal.
+The Gavish-Donoho threshold needs to be scaled by an estimate of the standard deviation of the noise,
+which can again be obtained by modelling technical noise in the input matrix.
+
+\subsection{Jackstraw}
+The \textit{Seurat} package for single-cell RNA-seq data analysis \cite{butler2018integrating} uses the jackstraw procedure \cite{chung2015statistical} for determining whether features are significantly associated with individual PCs.
+Briefly, observations for each feature in a randomly chosen subset of features are permuted.
+The PCA is performed on the modified matrix and a measure of association is computed for each PC with the permuted observations for the features in the chosen subset.
+This is repeated over several iterations to obtain a null distribution of association measures.
+The association measure is also computed for each feature and PC using the original data.
+A $p$-value is subsequently obtained for each gene and PC by comparing its original association measure with that of the null distribution.
+
+In practice, this approach yields a feature-by-PC matrix of $p$-values that needs to be consolidated into a decision regarding the number of PCs to retain. 
+We do so by combining the $p$-values for each PC using Simes' method \cite{simes1986improved}.
+This yields a combined $p$-value representing the evidence against the global null hypothesis for that PC, 
+i.e., that it is not significantly associated with any features.
+We then retain PCs up to the first PC that accepts the global null at a error threshold of 0.05.
+We note that a variety of other strategies can be used to consolidate multiple $p$-values into a single decision.
+However, simes' method is appealing as it is somewhat robust to correlations between features \cite{sarkar1997simes}, 
+which weakens the assumption of independence between features.
+
+\subsection{Summation of technical components}
+The \code{denoisePCA} function in the \textit{scran} package \cite{lun2016stepbystep} defines the number of PCs to retain based on the total technical noise in the input data.
+Technical noise is expected to be random and uncorrelated across genes, and thus should be mostly present in the later PCs.
+The number of PCs to retain is chosen as the smallest value $l$ such that 
+\[
+    \sum_{k=l+1}^N \sigma^2_k  \le \omega^2_t \;,
+\]
+where $N$ is the total number of PCs and $\omega^2_t$ is the sum of technical components for all features, estimated as previously described.
+This discards later PCs until the discarded variance is equal to the total technical variance in the data.
+The value of $l$ is a lower bound on the number of PCs required to capture the biological signal.
+Equality to this lower bound occurs when the signal is wholly captured by the first few PCs,
+though in practice, $l$ will be lower than the rank of the matrix containing the signal.
+Furthermore, we only use features where the total variance is greater than the estimated technical component.
+This ensures that there is some $l \in [1, N]$ that satisfies the above inequality.
+
+
+\bibliography{ref}
+\bibliographystyle{unsrt}
+\end{document}
