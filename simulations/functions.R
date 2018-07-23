@@ -68,7 +68,7 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     Seu <- CreateSeuratObject(observed)
     Seu <- ScaleData(Seu, do.scale=FALSE)
     Seu <- RunPCA(Seu, pc.genes=rownames(observed), seed.use=NULL, pcs.compute=max.rank)
-    Seu <- JackStraw(Seu)
+    Seu <- JackStraw(Seu, display.progress=FALSE)
 
     nsig <- colSums(apply(Seu@dr$pca@jackstraw@emperical.p.value, 2, p.adjust, method="BH") <= 0.05)
     jackstraw <- min(c(max.rank, which(nsig==0)-1L))
