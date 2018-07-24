@@ -232,6 +232,8 @@ However, this comes at the cost of introducing more bias when PCs capturing aspe
 The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||^2_F$ and the variance $||\mathbf{\tilde Y}_{(k)} - E(\mathbf{\tilde Y}_{(k)})||^2_F$, and provides a single overall measure of accuracy.
 
 \subsection{Evaluations with simple simulations}
+
+\subsubsection{Simulation design}
 We first considered a simple simulation involving $S$ subpopulations of $C$ cells with $G$ genes.
 A proportion of genes $P$ were chosen to drive biological heterogeneity.
 For each gene $g$ in the chosen set, the mean expression $\mu_{gp}$ in subpopulation $p$ was randomly sampled from a Normal distribution with mean zero and variance $s^2$.
@@ -241,17 +243,25 @@ The observed expression for gene $g$ in cell $c$ assigned to $p$ was defined as 
 We tested all combinations of parameters for $S$ from 5 to 20; $s^2$ from 0.2 to 1; $P$ from 0.2 to 1; $C$ from 200 to 5000; $G$ from 1000 to 5000;
 and $w^2_g$ of 1 (i.e., no heteroskedasticity) or sampled from a $\mbox{Gamma}(2,2)$ distribution (moderate) or $\mbox{Gamma}(0.2,0.2)$ (high).
 We also repeated the simulations where, instead of assigning each cell to a single subpopulation to create clusters,
-we created trajectories by considering each cell as a linear combination of two randomly chosen subpopulations with mixing proportions sampled from $\mbox{Uniform}(0, 1)$.
+we created trajectories by considering each cell as a linear combination of two randomly chosen subpopulations with mixing proportion sampled from $\mbox{Uniform}(0, 1)$.
 
-We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell (i.e., $\mu_{gp}$ for the cluster simulations, and the known linear combinations for the trajectory simulations).
-We compared the MSE for each method to the lowest MSE obtained by testing all possible values of $k$.
+We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell.
+For each cell, entries of $\mathbf{T}$ were set to the mean expression vector of the assigned subpopulation (i.e., $\mu_{gp}$) for the cluster simulations.
+For trajectories, entries of $\mathbf{T}$ were defined as the known linear combination of the two chosen subpopulations for each cell.
+In each simulation scenario, we determined lowest MSE obtained by testing all possible values of $k$.
+We then reported the results for each method in terms of fold-increases from the optimal MSE.
+For the technical summation method, we estimated $\omega^2_t$ as $||\mathbf{Y} - \mathbf{T}||^2_F$.
+(In practice, $\mathbf{T}$ is neither known nor necessary for estimating the technical components, but we have used it here for simplicity.)
+For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2/G$.
+
+\subsubsection{Simulation results}
 Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
-The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but also exhibiting a heavier tail of large MSEs.
-The nature of the suboptimalities reflects the theoretical differences between the two approaches.
+The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but exhibiting a heavier tail of large MSEs.
+The different nature of the suboptimalities reflects the theoretical differences between the two approaches.
 Technical summation consistently underestimates the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
-The jackstraw involves random permutations and relies on $p$-values that are inherently stochastic, which increases the variation in the chosen number of PCs.
+The jackstraw involves random permutations and relies on $p$-values that are inherently stochastic, which increases the variation in the chosen number of PCs across iterations.
 Parallel analysis recovers the optimal MSE most often but has an even heavier right tail than the jackstraw.
-This is attributable to the randomness of permuting an entire matrix.
+This is attributable to increased variation in $k$ due to the randomness of permuting an entire matrix.
 
 \begin{figure}
 \centering
