@@ -321,6 +321,30 @@ This is because the $r$ basis vectors of $\mathbf{T}$ will rarely be well-repres
 Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ rotation vectors.
 This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
 
+\subsection{Simulations based on real data}
+
+\subsubsection{Simulation design}
+We generated log-normalized expression values from real scRNA-seq data by following a published workflow \cite{lun2016stepbystep}.
+We first removed low-quality cells with low total counts, low total numbers of detected features and high spike-in proportions \cite{mccarthy2017scater}.
+We computed size factors for each gene using the deconvolution method \cite{lun2016pooling}, and separate size factors for each spike-in transcript \cite{lun2017assessing}.
+We divided the counts by the relevant size factors to obtain log-transformed normalized expression values.
+We estimated the technical component of variance of the transformed data for each gene by fitting a mean-dependent trend to the spike-in variances.
+We performed feature selection by only retaining endogenous genes with total variance greater than the technical component.
+If spike-in transcripts were not available, we instead used mitochondrial proportions for quality control,
+and we estimated the technical component for each gene by assuming Poisson noise.  
+
+Given a log-normalized expression matrix $\mathbf{Z}$, we generated a $s$-rank approximation $\mathbf{\tilde Z}_{(s)}$ as described above.
+For the purpose of simulating data, we treated $\mathbf{\tilde Z}_{(s)}$ as the matrix of true signal $\mathbf{T}$.
+We then simulated the observed matrix $\mathbf{Y}$ by computing $\mathbf{S} \circ (\mathbf{\tilde Z}_{(s)} - \mathbf{Z})$,
+where $\mathbf{S}$ is a random sign matrix of the same dimensions as $\mathbf{Z}$, i.e., each entry of $\mathbf{S}$ is independently sampled from $\{-1, 1\}$.
+This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}$.
+By only changing the sign of the residuals $\mathbf{\tilde Z}_{(s)} - \mathbf{Z}$, we also avoid making strong assumptions about the distribution of the noise.
+In particular, we can recapitulate the effects of discreteness and gene-to-gene heteroskedasicity more accurately.
+Obviously, the true rank of $\mathbf{Z}$ is not known, so we repeated these simulations using $s$ from 10 to 30.
+Methods for choosing $k$ were assessed as described for the simple simulations.
+
+%ensures that $E(\mathbf{Y}) = \mathbf{\tilde Z}_{(s)}$;
+
 \bibliography{ref}
 \bibliographystyle{unsrt}
 \end{document}
