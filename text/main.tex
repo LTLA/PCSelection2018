@@ -244,11 +244,13 @@ we created trajectories by considering each cell as a linear combination of two 
 
 We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell (i.e., $\mu_{gp}$ for the cluster simulations, and the known linear combinations for the trajectory simulations).
 We compared the MSE for each method to the lowest MSE obtained by testing all possible values of $k$.
-From Figure~\ref{fig:all}, we see that the jackstraw and technical summation methods provide consistently high performance with MSEs close to the optimum.
-The jackstraw method recovers the optimum MSE more frequently but the maximum MSE of the technical summation method is lower.
+Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
+The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but also exhibiting larger maximum MSEs.
 This reflects the differences between the two algorithms.
 Technical summation will consistently underestimate the true rank of $\mathbf{T}$,
 whereas the jackstraw relies on $p$-values (that are inherently stochastic across data sets) and random permutations.
+Parallel analysis recovers the optimal MSE most often but has even larger maximum MSEs compared to the jackstraw.
+This is attributable to the randomness of permuting observations across an entire matrix.
 
 \begin{figure}
 \centering
@@ -268,23 +270,45 @@ while the light grey histogram shows the distribution of all MSEs that were grea
 \end{figure}
 
 The performance of the Gavish-Donoho method warrants some closer inspection.
-When the variance of the noise $w^2_g$ is constant, this method is perfect with respect to minimizing the MSE (Figure~\ref{fig:noise}a).
-This is consistent with the claimed performance in the original paper \cite{gavish2014optimal}.
-When $w^2_g$ varies across genes, the MSE increases beyond that of other methods (Figure~\ref{fig:noise}b, c).
+When the variance of the noise $w^2_g$ is constant, this method is almost perfect with respect to minimizing the MSE (Figure~\ref{fig:noise}a).
+This is consistent with the theoretical guarantees on its performance \cite{gavish2014optimal}.
+When $w^2_g$ varies across genes, the MSE increases above that of other methods (Figure~\ref{fig:noise}b, c).
 This reflects the sensitivity of the method to violations of the assumption of a constant variance for the noise,
 which is unfortunate as (sc)RNA-seq data often exhibits strong mean-variance relationships \cite{lun2016stepbystep,law2014voom}. 
 It is possible to mitigate violations of this assumption by scaling the input matrix so that the technical components are the same across all genes.
 However, scaling would also distort the magnitudes of the biological components, e.g., by upweighting stably expressed high-abundance genes with small technical components.
 This changes the nature of the PCA and obviously precludes the recovery of the correct $\mathbf{T}$.
 
-The use of the Marchenko-Pastur limit also exhibits poor performance.
-This can be traced back to the underying assumptions.
-Like the Gavish-Donoho method, the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
-Violations of this assumption lead to increased MSE (Figure~\ref{fig:noise}).
+\begin{figure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=3]{../simulations/pics/Noise.pdf}
+    \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=2]{../simulations/pics/Noise.pdf}
+    \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=1]{../simulations/pics/Noise.pdf}
+    \caption{}
+\end{subfigure}
+\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE.
+Results were obtained for 10 simulation iterations for each combination of parameters with 
+(a) no variability in gene-wise variances, i.e., $w_g^2=1$;
+(b) moderate variability, i.e., $w_g^2 \sim \mbox{Gamma}(2, 2)$;
+or (c) high variability, i.e., $w_g^2 \sim \mbox{Gamma}(0.2, 0.2)$.
+Bars and histograms are as described in Figure~\ref{fig:all}.    
+}
+\label{fig:noise}
+\end{figure}
+
+The use of the Marchenko-Pastur limit also exhibits poor performance, which can be traced back to the underying assumptions.
+Like the Gavish-Donoho method, the application of the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
+Violations of this assumption lead to increased MSE when the limit is used to choose number of PCs (Figure~\ref{fig:noise}).
 However, even in the absence of variable noise, we observe some inflated MSEs compared to the other methods.
 This is because the first $r$ basis vectors will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
-Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ eigenvectors.
-This generally results in an overstatement of the number of PCs to retain as the later singular values will be increased above the Marchenko-Pastur limit.
+Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ rotation vectors.
+This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
 
 \bibliography{ref}
 \bibliographystyle{unsrt}
