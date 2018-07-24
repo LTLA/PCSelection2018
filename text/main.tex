@@ -246,12 +246,12 @@ we created trajectories by considering each cell as a linear combination of two 
 We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell (i.e., $\mu_{gp}$ for the cluster simulations, and the known linear combinations for the trajectory simulations).
 We compared the MSE for each method to the lowest MSE obtained by testing all possible values of $k$.
 Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
-The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but also exhibiting larger maximum MSEs.
-This reflects the differences between the two algorithms.
-Technical summation will consistently underestimate the true rank of $\mathbf{T}$,
-whereas the jackstraw relies on $p$-values (that are inherently stochastic across data sets) and random permutations.
-Parallel analysis recovers the optimal MSE most often but has even larger maximum MSEs compared to the jackstraw.
-This is attributable to the randomness of permuting observations across an entire matrix.
+The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but also exhibiting a heavier tail of large MSEs.
+The nature of the suboptimalities reflects the theoretical differences between the two approaches.
+Technical summation consistently underestimates the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
+The jackstraw involves random permutations and relies on $p$-values that are inherently stochastic, which increases the variation in the chosen number of PCs.
+Parallel analysis recovers the optimal MSE most often but has an even heavier right tail than the jackstraw.
+This is attributable to the randomness of permuting an entire matrix.
 
 \begin{figure}
 \centering
@@ -307,7 +307,7 @@ The use of the Marchenko-Pastur limit also exhibits poor performance, which can 
 Like the Gavish-Donoho method, the application of the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
 Violations of this assumption lead to increased MSE when the limit is used to choose number of PCs (Figure~\ref{fig:noise}).
 However, even in the absence of variable noise, we observe some inflated MSEs compared to the other methods.
-This is because the first $r$ basis vectors will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
+This is because the $r$ basis vectors of $\mathbf{T}$ will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
 Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ rotation vectors.
 This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
 
