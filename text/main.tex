@@ -128,8 +128,9 @@ Here, the aim is to visually detect the difference between early PCs that captur
 A sharp drop from the $k$\textsuperscript{th} to $(k+1)$\textsuperscript{th} PC suggests that most of the structure is captured in the first $k$ PCs \cite{cattell1966scree}.
 This manifests as an ``elbow'' in the scree plot at $k$, after which there is a plateau in the percentage of variance explained.
 To detect the elbow, we consider a line connecting the first and $n$\textsuperscript{th} PCs, using $n=50$ by default.
-The elbow -- and the number of PCs to retain -- is defined as the point on the curve in the scree plot that has the largest perpendicular distance to the line.
-This algorithm is relatively robust compared to methods that rely on derivatives.
+The elbow is defined as the point on the curve in the scree plot that has the largest perpendicular distance to the line.
+We then retain all PCs up to the elbow point (but not including) the elbow point.
+This algorithm is relatively robust compared to derivative-based methods that are sensitive to unstable numerical differentiation.
 
 \subsection{Parallel analysis}
 Horn's parallel analysis \cite{horn1965rationale} involves permuting all observations for each feature of the input matrix and performing PCA on this permuted matrix.

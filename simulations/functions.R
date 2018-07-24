@@ -55,11 +55,12 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     gv <- max(1L, gv)
 
     # Detecting the elbow in a scree plot, based on distance from the line.
+    # We '-1' to get the element _before_ the elbow, which is what we actually want to keep.
     v2last <- c(max.rank - 1L, prog.var[max.rank] - prog.var[1])
     v2last <- v2last/sqrt(sum(v2last^2))
     v2other <- rbind(seq_along(prog.var) - 1L, prog.var - prog.var[1])
     dist2point <- sqrt(colSums((v2other - outer(v2last, colSums(v2last * v2other)))^2))
-    elbow <- which.max(dist2point)
+    elbow <- which.max(dist2point) - 1L
 
     # Using Seurat's Jackstraw method, keeping up to the first PC with zero genes at a FDR of 5%.
     require(Seurat)
