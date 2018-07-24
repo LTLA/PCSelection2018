@@ -230,6 +230,60 @@ As $k$ decreases, noise is removed and precision improves.
 However, this comes at the cost of introducing more bias when PCs capturing aspects of $\mathbf{T}$ are discarded.
 The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||^2_F$ and the variance $||\mathbf{\tilde Y}_{(k)} - E(\mathbf{\tilde Y}_{(k)})||^2_F$, and provides a single overall measure of accuracy.
 
+\subsection{Evaluations with simple simulations}
+We first considered a simple simulation involving $S$ subpopulations of $C$ cells with $G$ genes.
+A proportion of genes $P$ were chosen to drive biological heterogeneity.
+For each gene $g$ in the chosen set, the mean expression $\mu_{gp}$ in subpopulation $p$ was randomly sampled from a Normal distribution with mean zero and variance $s^2$.
+For the remaining genes, the mean expression was set to zero for all subpopulations.
+Each cell was randomly assigned to one subpopulation.
+The observed expression for gene $g$ in cell $c$ assigned to $p$ was defined as $\mu_{gp} + \epsilon_{gc}$ where $\epsilon_{gc}$ was randomly sampled from a Normal distribution with mean zero and variance $w^2_g$.
+We tested all combinations of parameters for $S$ from 5 to 20; $s^2$ from 0.2 to 1; $P$ from 0.2 to 1; $C$ from 200 to 5000; $G$ from 1000 to 5000;
+and $w^2_g$ of 1 (i.e., no heteroskedasticity) or sampled from a $\mbox{Gamma}(2,2)$ distribution (moderate) or $\mbox{Gamma}(0.2,0.2)$ (high).
+We also repeated the simulations where, instead of assigning each cell to a single subpopulation to create clusters,
+we created trajectories by considering each cell as a linear combination of two randomly chosen subpopulations with mixing proportions sampled from $\mbox{Uniform}(0, 1)$.
+
+We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell (i.e., $\mu_{gp}$ for the cluster simulations, and the known linear combinations for the trajectory simulations).
+We compared the MSE for each method to the lowest MSE obtained by testing all possible values of $k$.
+From Figure~\ref{fig:all}, we see that the jackstraw and technical summation methods provide consistently high performance with MSEs close to the optimum.
+The jackstraw method recovers the optimum MSE more frequently but the maximum MSE of the technical summation method is lower.
+This reflects the differences between the two algorithms.
+Technical summation will consistently underestimate the true rank of $\mathbf{T}$,
+whereas the jackstraw relies on $p$-values (that are inherently stochastic across data sets) and random permutations.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=1]{../simulations/pics/Mode.pdf}
+    \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=2]{../simulations/pics/Mode.pdf}
+    \caption{}
+\end{subfigure}
+\caption{MSE for the number of PCs chosen by each method, as a fold increase from the optimal MSE.
+Each point represents the result for single simulation iteration for each combination of parameters.}
+\label{fig:all}
+\end{figure}
+
+The performance of the Gavish-Donoho method warrants some closer inspection.
+When the variance of the noise $w^2_g$ is constant, this method is perfect with respect to minimizing the MSE (Figure~\ref{fig:noise}a).
+This is consistent with the claimed performance in the original paper \cite{gavish2014optimal}.
+When $w^2_g$ varies across genes, the MSE increases beyond that of other methods (Figure~\ref{fig:noise}b, c).
+This reflects the sensitivity of the method to violations of the assumption of a constant variance for the noise,
+which is unfortunate as (sc)RNA-seq data often exhibits strong mean-variance relationships \cite{lun2016stepbystep,law2014voom}. 
+It is possible to mitigate violations of this assumption by scaling the input matrix so that the technical components are the same across all genes.
+However, scaling would also distort the magnitudes of the biological components, e.g., by upweighting stably expressed high-abundance genes with small technical components.
+This changes the nature of the PCA and obviously precludes the recovery of the correct $\mathbf{T}$.
+
+The use of the Marchenko-Pastur limit also exhibits poor performance.
+This can be traced back to the underying assumptions.
+Like the Gavish-Donoho method, the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
+Violations of this assumption lead to increased MSE (Figure~\ref{fig:noise}).
+However, even in the absence of variable noise, we observe some inflated MSEs compared to the other methods.
+This is because the first $r$ basis vectors will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
+Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ eigenvectors.
+This generally results in an overstatement of the number of PCs to retain as the later singular values will be increased above the Marchenko-Pastur limit.
+
 \bibliography{ref}
 \bibliographystyle{unsrt}
 \end{document}
