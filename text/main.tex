@@ -203,7 +203,7 @@ This ensures that there is some $l \in [1, N]$ that satisfies the above inequali
 
 \section{Assessing accuracy for any number of PCs}
 
-\subsubsection{MSE of the low-rank approximation}
+\subsection{MSE of the low-rank approximation}
 Consider an input scRNA-seq matrix $\mathbf{Y}$ where the rows are the samples (i.e., cells) and the columns are the features (i.e., genes).
 We perform an SVD to obtain the usual $\mathbf{Y} = \mathbf{U}\mathbf{D}\mathbf{V}'$, noting that each column of $\mathbf{U}\mathbf{D}$ is a PC.
 Now, assume that we only want to use the first $k$ PCs.
@@ -228,7 +228,7 @@ We can also view the choice of $k$ as a compromise between bias and precision.
 At the largest value of $k$, there is no bias as $E(\mathbf{\tilde Y}_{(k)}) = E(\mathbf{Y}) = \mathbf{T}$, but precision is poor due to the presence of high-dimensional noise.
 As $k$ decreases, noise is removed and precision improves.
 However, this comes at the cost of introducing more bias when PCs capturing aspects of $\mathbf{T}$ are discarded.
-The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||_F$ and the variance $||\tilde Y_{(k)} - E(\mathbf{\tilde Y}_{(k)})||_F$, and provides a single measure for evaluating accuracy.
+The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||^2_F$ and the variance $||\mathbf{\tilde Y}_{(k)} - E(\mathbf{\tilde Y}_{(k)})||^2_F$, and provides a single overall measure of accuracy.
 
 \bibliography{ref}
 \bibliographystyle{unsrt}
