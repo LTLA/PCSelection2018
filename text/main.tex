@@ -255,11 +255,13 @@ For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the 
 \subsection{Simulation results}
 Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
 The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but exhibiting a heavier tail of large MSEs.
-The different nature of the suboptimalities reflects the theoretical differences between the two approaches.
-Technical summation consistently underestimates the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
-The jackstraw involves random permutations and relies on $p$-values that are inherently stochastic, which increases the variation in the chosen number of PCs across iterations.
-Similarly, parallel analysis often yields the optimal MSE but has an even longer right tail than the jackstraw.
-This is attributable to increased stochasticity in the chosen $k$ from permuting an entire matrix.
+Their different suboptimalities reflect the theoretical differences between the two approaches.
+Technical summation consistently yields $k$ below the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
+In comparison, the jackstraw tests for associations between gene expression and each PC.
+This will often retain more PCs than the true rank of $\mathbf{T}$ (denoted $r$) in noisy data sets.
+Specifically, the subspace defined by the first $r$ rotation vectors is not equivalent to the $r$ basis vectors of $\mathbf{T}$ due to the noise.
+Genuine signal will then be captured by later PCs, resulting in significant associations.
+The jackstraw is also subject to random type I errors that introduce further variation in $k$ across iterations.
 
 \begin{figure}
 \begin{center}
@@ -282,7 +284,7 @@ This reflects the sensitivity of the Gavish-Donoho method to violations of the a
 which is unfortunate as (sc)RNA-seq data often exhibits strong mean-variance relationships \cite{lun2016stepbystep,law2014voom}. 
 It is possible to mitigate violations of this assumption by scaling the input matrix so that the technical components are the same across all genes.
 However, scaling would also distort the magnitudes of the biological components, e.g., by upweighting stably expressed high-abundance genes with small technical components.
-This changes the nature of the PCA and obviously precludes the recovery of the correct $\mathbf{T}$.
+This changes the nature of the problem and obviously precludes the accurate recovery of $\mathbf{T}$.
 
 \begin{figure}
 \begin{center}
@@ -300,13 +302,15 @@ Bars and abbreviations are as described in Figure~\ref{fig:all}.
 \label{fig:noise}
 \end{figure}
 
-The use of the Marchenko-Pastur limit also exhibits poor performance, which can be traced back to the underying assumptions.
+The use of the Marchenko-Pastur limit also exhibits poor performance, which can be traced back to its underying assumptions.
 Like the Gavish-Donoho method, the application of the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
 Violations of this assumption lead to increased MSE when the limit is used to choose number of PCs (Figure~\ref{fig:noise}).
-However, even in the absence of variable noise, we observe some inflated MSEs compared to the other methods.
-This is because the $r$ basis vectors of $\mathbf{T}$ will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
-Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ rotation vectors.
+However, even when the i.i.d.\ assumption holds, we observe inflated MSEs compared to the other methods.
+This is driven by the same phenomenon that affects the jackstraw, 
+i.e., the $r$ basis vectors of $\mathbf{T}$ do not define the same subspace as the first $r$ rotation vectors in noisy datasets.
+Instead, some of the variance from the true signal will be captured by the $>r$ rotation vectors.
 This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
+Parallel analysis is subject to the same effect, retaining more PCs than necessary and yielding a long tail of large MSEs.
 
 Elbow detection from the scree plot has large MSEs when the true signal is weak relative to the noise (Figure~\ref{fig:bio}).
 This occurs when the subpopulation means are weakly separated, either due to small differences in $\mu_{gp}$ or low $P$.
@@ -350,10 +354,10 @@ If spike-in transcripts were not available, we instead used mitochondrial propor
 and we estimated the technical component for each gene by assuming Poisson noise.  
 
 Given a log-normalized expression matrix $\mathbf{Z}$, we generated a $s$-rank approximation $\mathbf{\tilde Z}_{(s)}$ as described above.
-For the purpose of simulating data, we treated $\mathbf{\tilde Z}_{(s)}$ as the matrix of true signal $\mathbf{T}$.
-We then simulated the observed matrix $\mathbf{Y}$ by computing $\mathbf{S} \circ (\mathbf{\tilde Z}_{(s)} - \mathbf{Z})$,
+For the purpose of simulating data, we treated $\mathbf{\tilde Z}_{(s)}$ as the matrix of true signal.
+We then simulated the observed matrix $\mathbf{Y}'$ by computing $\mathbf{S} \circ (\mathbf{\tilde Z}_{(s)} - \mathbf{Z})$,
 where $\mathbf{S}$ is a random sign matrix of the same dimensions as $\mathbf{Z}$, i.e., each entry of $\mathbf{S}$ is independently sampled from $\{-1, 1\}$.
-This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}$.
+This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}'$.
 By only changing the sign of the residuals $\mathbf{\tilde Z}_{(s)} - \mathbf{Z}$, we also avoid making strong assumptions about the distribution of the noise.
 In particular, we can recapitulate the effects of discreteness and gene-to-gene heteroskedasicity more accurately.
 As the true rank of $E(\mathbf{Z})$ is not known, we repeated these simulations using $s$ from 10 to 30.
@@ -367,7 +371,7 @@ Methods for choosing $k$ were then evaluated as described for the simple simulat
 Parallel analysis and technical summation performed consistently well in both simulation scenarios (Figure~\ref{fig:real}).
 In comparison, other methods exhibited much larger MSEs in one or both simulations.
 These results are roughly consistent with those from the simple simulations.
-The summation approach is often suboptimal but consistently achieves low error, whereas other methods are more frequently optimal but yield larger maximum MSEs.
+The summation approach is often suboptimal but consistently achieves low error, while other methods can be more frequently optimal but yield larger maximum MSEs.
 
 \begin{figure}[btp]
 \begin{center}
@@ -381,13 +385,14 @@ Error bars represent one standard error.}
 \end{figure}
 
 \section{Discussion}
-Here, we have performed a variety of simulations to assess a range of methods for choosing the number of PCs to retain in scRNA-seq data analysis.
+Here, we have performed a variety of simulations to assess different strategies for choosing the number of PCs to retain in scRNA-seq data analysis.
 We find that existing methods implemented in widely used scRNA-seq analysis packages perform well.
 In particular, the technical summation method from \textit{scran} consistently yields low MSEs in all scenarios.
-While it is not always optimal, summation does not yield large MSEs either (no more than 2-fold greater than optimal), which suggests that it is sufficiently robust for general use.
-The jackstraw approach from \textit{Seurat} is more variable but also achieves the optimal MSE more frequently than summation.
-The choice between these two methods represents a trade-off between robustness and performance in the worst and best cases, respectively.
-Regardless, our results indicate that both of these strategies for choosing $k$ are generally satisfactory when analyzing scRNA-seq data.
+While it is not always optimal, summation does not yield large MSEs either, with no MSE being more than 2-fold greater than the optimum.
+The jackstraw approach from \textit{Seurat} is more variable but achieves the optimal MSE more frequently than summation.
+The choice between these two methods represents a trade-off between robustness and performance.
+Regardless, our results indicate that both of these strategies for choosing $k$ are generally satisfactory.
+This is despite the fact that neither method guarantees minimization of the MSE or even recovery of the rank of $\mathbf{T}$.
 
 It is also worth considering the practicalities involved in the use of each method.
 The Gavish-Donoho, Marchenko-Pastur and technical summation methods require an estimate of the standard deviation of the noise.
