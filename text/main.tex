@@ -258,8 +258,8 @@ The jackstraw method also performs well, recovering the optimal MSE more frequen
 The different nature of the suboptimalities reflects the theoretical differences between the two approaches.
 Technical summation consistently underestimates the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
 The jackstraw involves random permutations and relies on $p$-values that are inherently stochastic, which increases the variation in the chosen number of PCs across iterations.
-Parallel analysis recovers the optimal MSE most often but has an even heavier right tail than the jackstraw.
-This is attributable to increased variation in $k$ due to the randomness of permuting an entire matrix.
+Similarly, parallel analysis often yields the optimal MSE but has an even longer right tail than the jackstraw.
+This is attributable to increased stochasticity in the chosen $k$ from permuting an entire matrix.
 
 \begin{figure}
 \centering
@@ -271,42 +271,35 @@ This is attributable to increased variation in $k$ due to the randomness of perm
     \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 15mm,clip,page=2]{../simulations/pics/Mode.pdf}
     \caption{}
 \end{subfigure}
-\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold increases from the optimal MSE.
-Results were obtained for 10 simulation iterations for each combination of parameters for the (a) cluster or (b) trajectory simulations.
+\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold increases from the optimal MSE for the (a) cluster or (b) trajectory simulations.
+MSEs were obtained from 10 simulation iterations for each combination of parameters.
 For each method, the dark grey bar on the left represents the percentage of iterations in which the observed MSE was equal to the optimal value,
 while the light grey histogram shows the distribution of all MSEs that were greater than the optimum.}
 \label{fig:all}
 \end{figure}
 
 The performance of the Gavish-Donoho method warrants some closer inspection.
-When the variance of the noise $w^2_g$ is constant, this method is almost perfect with respect to minimizing the MSE (Figure~\ref{fig:noise}a).
+When the variance of the noise $w^2_g$ is constant, this method is almost perfect with respect to minimizing the MSE (Figure~\ref{fig:noise}).
 This is consistent with the theoretical guarantees on its performance \cite{gavish2014optimal}.
-When $w^2_g$ varies across genes, the MSE increases above that of other methods (Figure~\ref{fig:noise}b, c).
-This reflects the sensitivity of the method to violations of the assumption of a constant variance for the noise,
+When $w^2_g$ varies across genes, the MSE increases above that of other methods.
+This reflects the sensitivity of the Gavish-Donoho method to violations of the assumption of a constant variance for the noise,
 which is unfortunate as (sc)RNA-seq data often exhibits strong mean-variance relationships \cite{lun2016stepbystep,law2014voom}. 
 It is possible to mitigate violations of this assumption by scaling the input matrix so that the technical components are the same across all genes.
 However, scaling would also distort the magnitudes of the biological components, e.g., by upweighting stably expressed high-abundance genes with small technical components.
 This changes the nature of the PCA and obviously precludes the recovery of the correct $\mathbf{T}$.
 
 \begin{figure}
-\begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=3]{../simulations/pics/Noise.pdf}
-    \caption{}
-\end{subfigure}
-\begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=2]{../simulations/pics/Noise.pdf}
-    \caption{}
-\end{subfigure}
-\begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=1]{../simulations/pics/Noise.pdf}
-    \caption{}
-\end{subfigure}
-\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE.
-Results were obtained for 10 simulation iterations for each combination of parameters with 
-(a) no variability in gene-wise variances, i.e., $w_g^2=1$;
-(b) moderate variability, i.e., $w_g^2 \sim \mbox{Gamma}(2, 2)$;
-or (c) high variability, i.e., $w_g^2 \sim \mbox{Gamma}(0.2, 0.2)$.
-Bars and histograms are as described in Figure~\ref{fig:all}.    
+\begin{center}
+    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Noise.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Noise.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Noise.pdf}
+\end{center}
+\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE for each level of heteroskedasticity.
+MSEs were obtained from 10 simulation iterations for each combination of parameters with 
+no variability in gene-wise variances, i.e., $w_g^2=1$;
+moderate variability ($w_g^2 \sim \mbox{Gamma}(2, 2)$);
+or high variability ($w_g^2 \sim \mbox{Gamma}(0.2, 0.2)$).
+Bars are as described in Figure~\ref{fig:all}.    
 }
 \label{fig:noise}
 \end{figure}
@@ -318,6 +311,36 @@ However, even in the absence of variable noise, we observe some inflated MSEs co
 This is because the $r$ basis vectors of $\mathbf{T}$ will rarely be well-represented by the first $r$ rotation vectors in noisy datasets.
 Instead, some of the variance in the first $r$ basis vectors will be captured by the $>r$ rotation vectors.
 This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
+
+Elbow detection from the scree plot has large MSEs when the true signal is weak relative to the noise (Figure~\ref{fig:bio}).
+This occurs when the subpopulation means are weakly separated, either due to small differences in $\mu_{gp}$ or low $P$.
+In such cases, the scree plot will not exhibit any sharp curvature as noise will contribute strongly to the variance explained by all PCs.
+Thus, any detected elbow is unlikely to have a strong relation to the true rank of the signal.
+As the signal increases in strength, the curvature in the scree plot becomes more pronounced and the performance of elbow detection improves.
+By comparison, the behaviour of each of the other methods is mostly stable with respect to the strength of the biological signal.
+This is because they are less reliant on making distinctions between PCs based on the proportions of variance explained.
+
+\begin{figure}
+\begin{subfigure}[b]{\textwidth}
+    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Bio.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Bio.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Bio.pdf}
+\caption{}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Prop_DE.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Prop_DE.pdf}
+    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Prop_DE.pdf}
+\caption{}
+\end{subfigure}
+\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE for varying level of separation between subpoplations.
+MSEs for each method were obtained from each of 10 simulation iterations for each combination of parameters with 
+(a) weak separation ($s^2=0.2$), moderate separation ($s^2 = 0.5$) or or strong separation ($s^2 = 1$) between subpopulation means;
+or (b) a low proportion of genes ($P = 0.2$), a moderate proportion ($P=0.5$) or all genes ($P=1$) involving in separating subpopulations.
+Bars are as described in Figure~\ref{fig:all}.    
+}
+\label{fig:bio}
+\end{figure}
 
 \section{Evaluations with real data-based simulations}
 
