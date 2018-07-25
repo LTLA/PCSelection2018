@@ -17,6 +17,7 @@ computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     for (i in seq_along(collected)) { 
         running <- running + svd.out$u[,i,drop=FALSE] %*% (svd.out$d[i] * t(svd.out$v[,i,drop=FALSE]))
         collected[i] <- mean((t(running) + center - truth)^2)
+        gc()
     }
     return(collected)
 }
@@ -27,6 +28,7 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     SVD <- dec.out$SVD
     center <- dec.out$center
     prog.var <- SVD$d^2 / (ncol(observed) - 1) 
+    gc()
 
     # Using our denoising approach.
     tech.comp <- rowMeans((observed - truth)^2)
@@ -36,6 +38,7 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     # Applying parallel analysis.
     require(scran)
     parallel <- parallelPCA(observed, BPPARAM=MulticoreParam(3), value="n", threshold=0.05, approximate=TRUE, min.rank=1, max.rank=max.rank)
+    gc()
 
     # Using the Marchenko-Pastur limit on the _eigenvalues_.
     # (See https://www.wolfram.com/language/11/random-matrices/marchenko-pastur-distribution.html?product=mathematica)
@@ -74,6 +77,7 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     nsig <- colSums(apply(Seu@dr$pca@jackstraw@emperical.p.value, 2, p.adjust, method="BH") <= 0.05)
     jackstraw <- min(c(max.rank, which(nsig==0)-1L))
     jackstraw <- max(1L, jackstraw)
+    gc()
 
     # Determining the MSE at each number of components. 
     mse <- computeMSE(SVD, center, truth, ncomponents=max.rank)
