@@ -262,19 +262,15 @@ Similarly, parallel analysis often yields the optimal MSE but has an even longer
 This is attributable to increased stochasticity in the chosen $k$ from permuting an entire matrix.
 
 \begin{figure}
-\centering
-\begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 15mm,clip,page=1]{../simulations/pics/Mode.pdf}
-    \caption{}
-\end{subfigure}
-\begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth,trim=0mm 5mm 0mm 15mm,clip,page=2]{../simulations/pics/Mode.pdf}
-    \caption{}
-\end{subfigure}
-\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold increases from the optimal MSE for the (a) cluster or (b) trajectory simulations.
-MSEs were obtained from 10 simulation iterations for each combination of parameters.
+\begin{center}
+    \includegraphics[width=0.49\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=1]{../simulations/pics/Mode.pdf}
+    \includegraphics[width=0.49\textwidth,trim=0mm 5mm 0mm 5mm,clip,page=2]{../simulations/pics/Mode.pdf}
+\end{center}
+\caption{Distributions of MSEs for the number of PCs chosen by each method in the cluster (left) or trajectory simulations (right).
+MSEs were obtained from 10 simulation iterations for each combination of parameters, and are shown as fold increases from the optimal MSE for each iteration.
 For each method, the dark grey bar on the left represents the percentage of iterations in which the observed MSE was equal to the optimal value,
-while the light grey histogram shows the distribution of all MSEs that were greater than the optimum.}
+while the light grey histogram shows the distribution of all MSEs that were greater than the optimum.
+GV, Gavish-Donoho; MP, Marchenko-Pastur.}
 \label{fig:all}
 \end{figure}
 
@@ -290,16 +286,16 @@ This changes the nature of the PCA and obviously precludes the recovery of the c
 
 \begin{figure}
 \begin{center}
-    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Noise.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Noise.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Noise.pdf}
+    \includegraphics[height=2.8in,trim=0mm 5mm 8mm 5mm,clip,page=3]{../simulations/pics/Noise.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=2]{../simulations/pics/Noise.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=1]{../simulations/pics/Noise.pdf}
 \end{center}
-\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE for each level of heteroskedasticity.
+\caption{Distributions of MSEs for the number of PCs chosen by each method in simulations with different levels of heteroskedasticity.
 MSEs were obtained from 10 simulation iterations for each combination of parameters with 
 no variability in gene-wise variances, i.e., $w_g^2=1$;
-moderate variability ($w_g^2 \sim \mbox{Gamma}(2, 2)$);
-or high variability ($w_g^2 \sim \mbox{Gamma}(0.2, 0.2)$).
-Bars are as described in Figure~\ref{fig:all}.    
+moderate variability, i.e., $w_g^2 \sim \mbox{Gamma}(2, 2)$;
+or high variability, i.e., $w_g^2 \sim \mbox{Gamma}(0.2, 0.2)$.
+Bars and abbreviations are as described in Figure~\ref{fig:all}.    
 }
 \label{fig:noise}
 \end{figure}
@@ -322,22 +318,22 @@ This is because they are less reliant on making distinctions between PCs based o
 
 \begin{figure}
 \begin{subfigure}[b]{\textwidth}
-    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Bio.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Bio.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Bio.pdf}
+    \includegraphics[height=2.8in,trim=0mm 5mm 8mm 5mm,clip,page=1]{../simulations/pics/Bio.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=2]{../simulations/pics/Bio.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=3]{../simulations/pics/Bio.pdf}
 \caption{}
 \end{subfigure}
 \begin{subfigure}[b]{\textwidth}
-    \includegraphics[height=2.8in,trim=0mm 5mm 10mm 5mm,clip,page=1]{../simulations/pics/Prop_DE.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=2]{../simulations/pics/Prop_DE.pdf}
-    \includegraphics[height=2.8in,trim=25mm 5mm 10mm 5mm,clip,page=3]{../simulations/pics/Prop_DE.pdf}
+    \includegraphics[height=2.8in,trim=0mm 5mm 8mm 5mm,clip,page=1]{../simulations/pics/{Prop.DE}.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=2]{../simulations/pics/{Prop.DE}.pdf}
+    \includegraphics[height=2.8in,trim=26mm 5mm 8mm 5mm,clip,page=3]{../simulations/pics/{Prop.DE}.pdf}
 \caption{}
 \end{subfigure}
-\caption{Distributions of MSEs for the number of PCs chosen by each method, shown as fold-increases from the optimal MSE for varying level of separation between subpoplations.
+\caption{Distributions of MSEs for the number of PCs chosen by each method in simulations with different levels of separation between subpoplations.
 MSEs for each method were obtained from each of 10 simulation iterations for each combination of parameters with 
 (a) weak separation ($s^2=0.2$), moderate separation ($s^2 = 0.5$) or or strong separation ($s^2 = 1$) between subpopulation means;
-or (b) a low proportion of genes ($P = 0.2$), a moderate proportion ($P=0.5$) or all genes ($P=1$) involving in separating subpopulations.
-Bars are as described in Figure~\ref{fig:all}.    
+or (b) a low proportion of genes ($P = 0.2$), a moderate proportion ($P=0.5$) or all genes ($P=1$) involved in separating subpopulations.
+Bars and abbreviations are as described in Figure~\ref{fig:all}.    
 }
 \label{fig:bio}
 \end{figure}
