@@ -385,15 +385,33 @@ Error bars represent one standard error.}
 \end{figure}
 
 \section{Discussion}
-Performance aside, it is worth considering the practicalities involved in the use of each method.
+Here, we have performed a variety of simulations to assess a range of methods for choosing the number of PCs to retain in scRNA-seq data analysis.
+We find that existing methods implemented in widely used scRNA-seq analysis packages perform well.
+In particular, the technical summation method from \textit{scran} consistently yields low MSEs in all scenarios.
+While it is not always optimal, summation does not yield large MSEs either (no more than 2-fold greater than optimal), which suggests that it is sufficiently robust for general use.
+The jackstraw approach from \textit{Seurat} is more variable but also achieves the optimal MSE more frequently than summation.
+The choice between these two methods represents a trade-off between robustness and performance in the worst and best cases, respectively.
+Regardless, our results indicate that both of these strategies for choosing $k$ are generally satisfactory when analyzing scRNA-seq data.
+
+It is also worth considering the practicalities involved in the use of each method.
 The Gavish-Donoho, Marchenko-Pastur and technical summation methods require an estimate of the standard deviation of the noise.
 In scRNA-seq experiments, this is most conventionally achieved by adding spike-in transcripts and estimating the technical component of the variation in the expression values.
 However, this may not always be possible (e.g., droplet-based experiments) in which case assumptions need to be made about the nature of the noise.
 For example, we might assume that noise is driven by Poisson sampling in data sets with unique molecular identifiers, where overdispersion due to amplification noise is not an issue.
 The jackstraw method and parallel analysis do not require the magnitude of the noise but instead repeat the PCA on permuted data.
 This avoids the need for spike-ins or assumptions but involves more computational work, which is unappealing when dealing with large data sets.
-Elbow detection is the simplest method as it does not use the noise magnitude or permutations,
-though the choice of elbow location can be arbitrary in data sets with weak signal.
+Elbow detection in the scree plot is the simplest method as it does not use the noise magnitude or permutations.
+
+In this report, we have only discussed the retention of first $k$ PCs.
+This is because the first $k$ components provide the best low-rank approximation $\mathbf{\tilde Y}_{(k)}$ to $\mathbf{Y}$.
+It is possible that an arbitrary subset of PCs could yield a better approximation to the true signal matrix $\mathbf{T}$.
+For example, the first PC could be driven by one very noisy gene with equal expected expression in all samples --
+ignoring this PC would improve the approximation of the remaining PCs to $\mathbf{T}$.
+An interesting avenue for future research is to formulate a method that achieves even lower MSEs than the optimum in our simulations,
+by retaining specific PCs based on per-gene estimates of the noise.
+However, note that this does not refer to \textit{ad hoc} methods based on correlation of PCs to uninteresting factors such as the expression of ``house-keeping'' genes,
+which requires the strong assumption that these genes are constant across all cells;
+or to batch effects, which should have been removed beforehand with batch correction methods.
 
 \bibliography{ref}
 \bibliographystyle{unsrt}
