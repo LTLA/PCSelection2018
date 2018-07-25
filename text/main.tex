@@ -384,6 +384,17 @@ Error bars represent one standard error.}
 \label{fig:real}
 \end{figure}
 
+\section{Discussion}
+Performance aside, it is worth considering the practicalities involved in the use of each method.
+The Gavish-Donoho, Marchenko-Pastur and technical summation methods require an estimate of the standard deviation of the noise.
+In scRNA-seq experiments, this is most conventionally achieved by adding spike-in transcripts and estimating the technical component of the variation in the expression values.
+However, this may not always be possible (e.g., droplet-based experiments) in which case assumptions need to be made about the nature of the noise.
+For example, we might assume that noise is driven by Poisson sampling in data sets with unique molecular identifiers, where overdispersion due to amplification noise is not an issue.
+The jackstraw method and parallel analysis do not require the magnitude of the noise but instead repeat the PCA on permuted data.
+This avoids the need for spike-ins or assumptions but involves more computational work, which is unappealing when dealing with large data sets.
+Elbow detection is the simplest method as it does not use the noise magnitude or permutations,
+though the choice of elbow location can be arbitrary in data sets with weak signal.
+
 \bibliography{ref}
 \bibliographystyle{unsrt}
 \end{document}
