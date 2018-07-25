@@ -344,7 +344,6 @@ Bars are as described in Figure~\ref{fig:all}.
 
 \section{Evaluations with real data-based simulations}
 
-\subsection{Simulation design}
 We generated log-normalized expression values from real scRNA-seq data by following a published workflow \cite{lun2016stepbystep}.
 We first removed low-quality cells with low total counts, low total numbers of detected features and high spike-in proportions \cite{mccarthy2017scater}.
 We computed size factors for each gene using the deconvolution method \cite{lun2016pooling}, and separate size factors for each spike-in transcript \cite{lun2017assessing}.
@@ -361,10 +360,29 @@ where $\mathbf{S}$ is a random sign matrix of the same dimensions as $\mathbf{Z}
 This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}$.
 By only changing the sign of the residuals $\mathbf{\tilde Z}_{(s)} - \mathbf{Z}$, we also avoid making strong assumptions about the distribution of the noise.
 In particular, we can recapitulate the effects of discreteness and gene-to-gene heteroskedasicity more accurately.
-Obviously, the true rank of $\mathbf{Z}$ is not known, so we repeated these simulations using $s$ from 10 to 30.
-Methods for choosing $k$ were assessed as described for the simple simulations.
+As the true rank of $E(\mathbf{Z})$ is not known, we repeated these simulations using $s$ from 10 to 30.
 
-%ensures that $E(\mathbf{Y}) = \mathbf{\tilde Z}_{(s)}$;
+% Also ensures that $E(\mathbf{Y}) = \mathbf{\tilde Z}_{(s)}$;
+
+We used our framework to generate simulated data from a mouse embryonic stem cell (mESC) data set \cite{kolod2015single} and a droplet-based data set using peripheral blood mononuclear cells (PBMCs) \cite{zheng2017massively}.
+For the mESC data set, we only considered the single batch in which spike-ins were added, involving approximately 200 cells.
+For the PBMC data set, we considered approximately 4000 cells after quality control.
+Methods for choosing $k$ were then evaluated as described for the simple simulations.
+Parallel analysis and technical summation performed consistently well in both simulation scenarios (Figure~\ref{fig:real}).
+In comparison, other methods exhibited much larger MSEs in one or both simulations.
+These results are roughly consistent with those from the simple simulations.
+The summation approach is often suboptimal but consistently achieves low error, whereas other methods are more frequently optimal but yield larger maximum MSEs.
+
+\begin{figure}[btp]
+\begin{center}
+\includegraphics[width=0.49\textwidth,trim=0mm 15mm 5mm 5mm,clip]{../real/pics/kolod.pdf}
+\includegraphics[width=0.49\textwidth,trim=0mm 15mm 5mm 5mm,clip]{../real/pics/pbmc4k.pdf}
+\end{center}
+\caption{Average MSE for the number of PCs chosen by each method in the simulations based on the mESC and PBMC data sets, shown as fold-increases from the optimal MSE.
+The height of each bar represents the average fold-increase in the MSE from 10 simulation iterations at each rank $s$.
+Error bars represent one standard error.}
+\label{fig:real}
+\end{figure}
 
 \bibliography{ref}
 \bibliographystyle{unsrt}
