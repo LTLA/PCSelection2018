@@ -232,16 +232,16 @@ The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||^2_F$
 \section{Evaluations with simple simulations}
 
 \subsection{Simulation design}
-We first considered a simple simulation involving $S$ subpopulations of $C$ cells with $G$ genes.
+We considered a simple simulation involving $S$ subpopulations of $C$ cells with $G$ genes.
 A proportion of genes $P$ were chosen to drive biological heterogeneity.
-For each gene $g$ in the chosen set, the mean expression $\mu_{gp}$ in subpopulation $p$ was randomly sampled from a Normal distribution with mean zero and variance $s^2$.
+For each gene $g$ in the chosen set, the mean expression $\mu_{gp}$ in subpopulation $p$ was randomly sampled from a $\mbox{Normal}(0, s^2)$ distribution.
 For the remaining genes, the mean expression was set to zero for all subpopulations.
 Each cell was randomly assigned to one subpopulation.
-The observed expression for gene $g$ in cell $c$ assigned to $p$ was defined as $\mu_{gp} + \epsilon_{gc}$ where $\epsilon_{gc}$ was randomly sampled from a Normal distribution with mean zero and variance $w^2_g$.
+The observed expression for gene $g$ in cell $c$ assigned to $p$ was defined as $\mu_{gp} + \epsilon_{gc}$ where $\epsilon_{gc} \sim \mbox{Normal}(0, w^2_g)$ and represents the effect of technical noise.
 We tested all combinations of parameters for $S$ from 5 to 20; $s^2$ from 0.2 to 1; $P$ from 0.2 to 1; $C$ from 200 to 5000; $G$ from 1000 to 5000;
-and $w^2_g$ of 1 (i.e., no heteroskedasticity) or sampled from a $\mbox{Gamma}(2,2)$ distribution (moderate) or $\mbox{Gamma}(0.2,0.2)$ (high).
+and $w^2_g$ of 1 (i.e., constant variance) or sampled from a $\mbox{Gamma}(2,2)$ or $\mbox{Gamma}(0.2,0.2)$ distribution.
 We also repeated the simulations where, instead of assigning each cell to a single subpopulation to create clusters,
-we created trajectories by considering each cell as a linear combination of two randomly chosen subpopulations with mixing proportion sampled from $\mbox{Uniform}(0, 1)$.
+we created trajectories by treating each cell as a linear combination of two randomly chosen subpopulations with mixing proportion sampled from a $\mbox{Uniform}(0, 1)$ distribution.
 
 We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell.
 For each cell, entries of $\mathbf{T}$ were set to the mean expression vector of the assigned subpopulation (i.e., $\mu_{gp}$) for the cluster simulations.
@@ -250,7 +250,7 @@ In each simulation scenario, we determined lowest MSE obtained by testing all po
 We then reported the results for each method in terms of fold-increases from the optimal MSE.
 For the technical summation method, we estimated $\omega^2_t$ as $||\mathbf{Y} - \mathbf{T}||^2_F$.
 (In practice, $\mathbf{T}$ is neither known nor necessary for estimating the technical components, but we have used it here for simplicity.)
-For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2/G$.
+For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2_t/G$.
 
 \subsection{Simulation results}
 Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
@@ -342,6 +342,46 @@ Bars and abbreviations are as described in Figure~\ref{fig:all}.
 \label{fig:bio}
 \end{figure}
 
+\subsection{Comments on technical noise}
+In these simulations, we have only considered the removal of technical noise in $\epsilon_{gc}$.
+This is because the technical component of variation is relatively easy to estimate in real scRNA-seq data.
+We can add a constant quantity of spike-in transcripts to each cell, and estimate the technical noise from the variation in the coverage of the spike-ins across cells.
+Alternatively, for data involving unique molecular identifiers \cite{islam2014quantitative}, we could assume that the noise is driven by Poisson sampling.
+This is justified by the removal of PCR amplification biases and associated overdispersion in the counts.
+However, there also exists biological noise caused by transcriptional kinetics \cite{kim2013inferring} and cellular processes like the cell cycle \cite{scialdone2015computational}.
+Choosing $k$ based on $\omega^2_t$ will not remove such biological noise.
+
+We argue that biological noise is part of the true signal $\mathbf{T}$ and should not be removed.
+We are only interested in removing the technical noise introduced by the scRNA-seq protocol as this is always irrelevant to the underlying biology.
+The remaining heterogeneity should be preserved as it reflects the true state of the cell population.
+Even random biological noise can be critical to the interpretation of the results, e.g., when studying fate commitment decisions \cite{balazsi2011cellular}.
+Its removal may exaggerate the separation between subpopulations (Figure~\ref{fig:bionoise}), possibly promoting the identification of spurious cell types.
+It is also difficult to estimate the magnitude of biological noise, and to disentangle random noise from structured variation related to cell cycle or metabolic activity.
+Deciding which aspects of biological noise are ``uninteresting'' depends heavily on domain expertise and is beyond the scope of this report.
+
+\begin{figure}[btp]
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+\includegraphics[width=\textwidth,page=1]{../simulations/pics/bio_noise.pdf}
+\caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.49\textwidth}
+\includegraphics[width=\textwidth,page=2]{../simulations/pics/bio_noise.pdf}
+\caption{}
+\end{subfigure}
+\caption{Effect of removing biological noise in a simulation with two subpopulations.
+(a) PCA plot of the simulation design involving 1000 genes and 100 cells.
+Cells were split into two subpopulations, denoted by the point shape.
+Subpopulation means were set to 0 or 0.5 for all genes in each population.
+Biological noise was introduced by adding an independent standard Normal variate to each observation.
+Technical noise was also introduced by adding another independent standard Normal variate to each observation.
+(b) Average silhouette widths for each cell, computed using the known subpopulation labels.
+Distances were calculated using the true expression for each cell (subpopulation mean with added biological noise);
+or using the first few PCs, with $k$ chosen by the Gavish-Donoho method to remove all random noise or only the technical noise.
+}
+\label{fig:bionoise}
+\end{figure}
+
 \section{Evaluations with real data-based simulations}
 
 We generated log-normalized expression values from real scRNA-seq data by following a published workflow \cite{lun2016stepbystep}.
@@ -359,7 +399,7 @@ We then simulated the observed matrix $\mathbf{Y}'$ by computing $\mathbf{S} \ci
 where $\mathbf{S}$ is a random sign matrix of the same dimensions as $\mathbf{Z}$, i.e., each entry of $\mathbf{S}$ is independently sampled from $\{-1, 1\}$.
 This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}'$.
 By only changing the sign of the residuals $\mathbf{\tilde Z}_{(s)} - \mathbf{Z}$, we also avoid making strong assumptions about the distribution of the noise.
-In particular, we can recapitulate the effects of discreteness and gene-to-gene heteroskedasicity more accurately.
+In particular, we can recapitulate the effects of discreteness and observation-specific variances more accurately.
 As the true rank of $E(\mathbf{Z})$ is not known, we repeated these simulations using $s$ from 10 to 30.
 
 % Also ensures that $E(\mathbf{Y}) = \mathbf{\tilde Z}_{(s)}$;
