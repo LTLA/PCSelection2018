@@ -4,7 +4,7 @@ decomposer <- function(y, nrank, approximate=FALSE) {
     if (approximate) {
         SVD <- irlba::irlba(t(y), center=center, nv=nrank)
     } else {
-        SVD <- svd(t(y - center), nu=nrank, nv=nrank)
+        SVD <- svd(as.matrix(t(y - center)), nu=nrank, nv=nrank)
         SVD$d <- SVD$d[seq_len(nrank)]            
     }
     list(SVD=SVD, center=center)
@@ -22,21 +22,16 @@ computeMSE <- function(svd.out, center, truth, ncomponents=100) {
     return(collected)
 }
 
-#' Assessing each strategy to choose the number of PCs.
-chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) { 
-    dec.out <- decomposer(observed, nrank=max.rank, approximate=approximate)
-    SVD <- dec.out$SVD
-    center <- dec.out$center
-    prog.var <- SVD$d^2 / (ncol(observed) - 1) 
-    gc()
-
+#' Choosing the number of PCs via a variety of strategies.
+chooseNumber <- function(observed, SVD, tech.comp) { 
     # Using our denoising approach.
-    tech.comp <- rowMeans((observed - truth)^2)
+    prog.var <- SVD$d^2 / (ncol(observed) - 1) 
     tech.var <- sum(tech.comp)
-    denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var, total=sum(matrixStats::rowVars(observed)))
+    denoised <- scran:::.get_npcs_to_keep(prog.var, tech.var, total=sum(DelayedMatrixStats::rowVars(DelayedArray::DelayedArray(observed))))
     
     # Applying parallel analysis.
     require(scran)
+    max.rank <- ncol(SVD$v)
     parallel <- parallelPCA(observed, BPPARAM=MulticoreParam(3), value="n", threshold=0.05, approximate=TRUE, min.rank=1, max.rank=max.rank)
     gc()
 
@@ -70,7 +65,7 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     rownames(observed) <- paste0("Gene", seq_len(nrow(observed)))
     colnames(observed) <- paste0("Cell", seq_len(ncol(observed)))
     Seu <- CreateSeuratObject(observed)
-    Seu <- ScaleData(Seu, do.scale=FALSE)
+    Seu <- ScaleData(Seu, do.scale=FALSE, display.progress=FALSE)
     Seu <- RunPCA(Seu, pc.genes=rownames(observed), seed.use=NULL, pcs.compute=max.rank)
     Seu <- JackStraw(Seu, display.progress=FALSE)
 
@@ -79,11 +74,24 @@ chooseNumber <- function(observed, truth, max.rank=50, approximate=FALSE) {
     jackstraw <- max(1L, jackstraw)
     gc()
 
+    return(c(elbow=elbow, parallel=parallel, marchenko=marchenko, gavish=gv, jackstraw=jackstraw, denoised=denoised))
+}
+
+#' Assessing each strategy to choose the number of PCs in simulations.
+assessChoices <- function(observed, truth, max.rank=50, approximate=FALSE) {
+    dec.out <- decomposer(observed, nrank=max.rank, approximate=approximate)
+    SVD <- dec.out$SVD
+    center <- dec.out$center
+
+    # Making choices.
+    tech.comp <- rowMeans((observed - truth)^2)
+    choices <- chooseNumber(observed, SVD, tech.comp)
+
     # Determining the MSE at each number of components. 
     mse <- computeMSE(SVD, center, truth, ncomponents=max.rank)
     optimal <- which.min(mse)
 
-    num.pcs <- c(elbow=elbow, parallel=parallel, marchenko=marchenko, gavish=gv, jackstraw=jackstraw, denoised=denoised, optimal=optimal)
+    num.pcs <- c(choices, optimal=optimal)
     cur.mse <- mse[num.pcs]
     names(cur.mse) <- names(num.pcs)
     return(list(number=num.pcs, mse=cur.mse))
@@ -111,7 +119,7 @@ runSimulation <- function(prefix, truth.FUN, iters=10, observed.FUN=NULL) {
                     truth <- truth.FUN(ngenes*affected, ncells)
                     truth <- rbind(truth, matrix(0, ncol=ncells, nrow=(1-affected)*ngenes))
                     y <- observed.FUN(truth)
-                    out <- chooseNumber(y, truth, approximate=any(dim(y)>1000))
+                    out <- assessChoices(y, truth, approximate=any(dim(y)>1000))
 
                     is.first <- counter==1L && it==1L
                     write.table(data.frame(Ncells=ncells, Ngenes=ngenes, Prop.DE=affected),
@@ -148,16 +156,15 @@ addNoise <- function(variance) {
 }
 
 #' Generate a low-rank "truth" and flip the sign of the residuals to create the "observed" matrix.
-generateReal <- function(original, SVD, center, nrank=20) {
+generateReal <- function(original, SVD, center, noise, nrank=20) {
     i <- seq_len(nrank)
     recon <- t(SVD$u[,i,drop=FALSE] %*% (SVD$d[i] * t(SVD$v[,i,drop=FALSE]))) + center
-    resid <- abs(original - recon)
-    resim <- recon + resid * sample(c(-1, 1), length(resid), replace=TRUE)
+    resim <- recon + rnorm(length(recon), sd=sqrt(noise))
     list(truth=recon, observed=resim) 
 }
 
 #' Execute PC selection methods on the simulated data based on real data.
-simulateReal <- function(original, prefix, iters=10) {
+simulateReal <- function(original, noise, prefix, iters=10) {
     sim.vals <- decomposer(original, approximate=TRUE, nrank=50)
     scn.fname <- paste0(prefix, "_scenarios.txt")
     npc.fname <- paste0(prefix, "_numbers.txt")
@@ -166,8 +173,8 @@ simulateReal <- function(original, prefix, iters=10) {
 
     for (recon.rank in c(10, 20, 30)) {
         for (it in seq_len(iters)) {
-            sim <- generateReal(original, sim.vals$SVD, sim.vals$center, recon.rank)
-            out <- chooseNumber(sim$observed, sim$truth, approximate=TRUE)
+            sim <- generateReal(original, sim.vals$SVD, sim.vals$center, noise=noise, nrank=recon.rank)
+            out <- assessChoices(sim$observed, sim$truth, approximate=TRUE)
 
             is.first <- counter==1L && it==1L
             write.table(data.frame(Rank=recon.rank), file=scn.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
