@@ -17,10 +17,10 @@ do
         do
 sbatch << EOT
 #!/bin/bash
-#SBATCH -o logs/out-gauss-${npops}-${sd}
-#SBATCH -e logs/err-gauss-${npops}-${sd}
+#SBATCH -o logs/out-gauss-${npops}-${sd}-${hypervar}
+#SBATCH -e logs/err-gauss-${npops}-${sd}-${hypervar}
 #SBATCH -n 1
-#SBATCH --mem 8000
+#SBATCH --mem 16000
 
 echo 'NPOPS <- ${npops}; SD <- ${sd}; HYPERVAR <- "${hypervar}"; source("sim_gaussclust.R")' | ${R} --slave --vanilla
 EOT
@@ -38,10 +38,10 @@ do
         do
 sbatch << EOT
 #!/bin/bash
-#SBATCH -o logs/out-traj-${npops}-${sd}
-#SBATCH -e logs/err-traj-${npops}-${sd}
+#SBATCH -o logs/out-traj-${npops}-${sd}-${hypervar}
+#SBATCH -e logs/err-traj-${npops}-${sd}-${hypervar}
 #SBATCH -n 1
-#SBATCH --mem 8000
+#SBATCH --mem 16000
 
 echo 'NPOPS <- ${npops}; SD <- ${sd}; HYPERVAR <- "${hypervar}"; source("sim_trajectory.R")' | ${R} --slave --vanilla
 EOT
