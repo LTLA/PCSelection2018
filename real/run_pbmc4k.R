@@ -3,4 +3,4 @@
 source("../simulations/functions.R")
 full <- readRDS("Processed/pbmc4k.rds")
 dir.create("results", showWarnings=FALSE)
-simulateReal(full, prefix="results/pbmc4k")
+simulateReal(full$exprs, prefix="results/pbmc4k")

@@ -48,4 +48,4 @@ dec <- decomposeVar(sce, fit)
 
 keep <- dec$bio > 0 & !isSpike(sce)
 dir.create("Processed", showWarnings=FALSE)
-saveRDS(file=file.path("Processed", "kolod.rds"), as.matrix(logcounts(sce)[keep,]))
+saveRDS(file=file.path("Processed", "kolod.rds"), list(exprs=logcounts(sce)[keep,], noise=dec$tech[keep]))

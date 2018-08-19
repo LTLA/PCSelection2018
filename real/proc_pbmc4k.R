@@ -33,11 +33,11 @@ sce.4k <- computeSumFactors(sce.4k, clusters=clusters, min.mean=0.1, BPPARAM=Mul
 sce.4k <- normalize(sce.4k)
 
 # Modelling the mean-variance trend.
-fit.4k <- trendVar(sce.4k, use.spikes=FALSE, loess.args=list(span=0.1))
-##plot(fit.4k$mean, fit.4k$vars)
-##curve(fit.4k$trend(x), add=TRUE, col="red")
-dec.4k <- decomposeVar(fit=fit.4k)
+fit.4k <- makeTechTrend(x=sce.4k)
+dec.4k <- decomposeVar(sce.4k, fit=list(trend=fit.4k))
+##plot(dec.4k$mean, dec.4k$total)
+##curve(fit.4k(x), add=TRUE, col="red")
 
 keep <- dec.4k$bio > 0
 dir.create("Processed", showWarnings=FALSE)
-saveRDS(file=file.path("Processed", "pbmc4k.rds"), as.matrix(logcounts(sce.4k)[keep,]))
+saveRDS(file=file.path("Processed", "pbmc4k.rds"), list(exprs=logcounts(sce.4k)[keep,], noise=dec.4k$tech[keep]))
