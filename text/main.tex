@@ -213,31 +213,21 @@ Furthermore, we only use features where the total variance is greater than the e
 This ensures that there is some $l \in [1, N]$ that satisfies the above inequality.
 
 \section{Assessing accuracy with the MSE}
-Consider an input scRNA-seq matrix $\mathbf{Y}$ where the rows are the samples (i.e., cells) and the columns are the features (i.e., genes).
-We perform an SVD to obtain the usual $\mathbf{Y} = \mathbf{U}\mathbf{D}\mathbf{V}'$, noting that each column of $\mathbf{U}\mathbf{D}$ is a PC.
-Now, assume that we only want to use the first $k$ PCs.
-This is equivalent to setting the singular values to zero for all but the first $k$ diagonal entries of $\mathbf{D}$ (denote this modified matrix as $\mathbf{D}_{(k)}$),
-which ensures that all but the first $k$ columns of $\mathbf{U}\mathbf{D}$ are zero and can be ignored.
-From the Eckart-Young theorem, the best $k$-rank approximation to $\mathbf{Y}$ is $\mathbf{\tilde Y}_{(k)} =  \mathbf{U}\mathbf{D}_{(k)}\mathbf{V}'$.
-
-We further assume that $\mathbf{Y}$ is the sum of a signal matrix $\mathbf{T}$ of the same dimensions, 
+We assume that $\mathbf{Y}$ is the sum of a signal matrix $\mathbf{T}$ of the same dimensions, 
 containing the true signal (i.e., gene expression) in each entry of the matrix;
 and a noise matrix of the same dimensions, where each entry has an expectation of zero and is independently distributed from the other entries.
-Our aim is to choose $k$ such that the Frobenius norm of $\mathbf{\tilde Y}_{(k)} - \mathbf{T}$ is minimized.
-In other words, we want to minimize the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the true signal $\mathbf{T}$.
+Our aim is to choose $k$ such that the Frobenius norm of $\mathbf{\tilde Y}_{k} - \mathbf{T}$ is minimized.
+In other words, we want to minimize the MSE of the low-rank approximation $\mathbf{\tilde Y}_{k}$ from the true signal $\mathbf{T}$.
 This is arguably the only relevant measure of performance when PCA is applied to remove noise.
 We do not intend to interpret the individual PCs, nor do we care about the true rank of $\mathbf{T}$.
-
-It is worth pointing out that the Euclidean distances between cells using the PC coordinates (i.e., from $\mathbf{U}\mathbf{D}_{(k)}$) are the same as the corresponding distances computed from $\mathbf{\tilde Y}_{(k)}$.
-This means that minimizing the MSE of $\mathbf{\tilde Y}_{(k)}$ will also improve the correspondence between the distances between cells computed from the PCs and the true distances computed from the unknown $\mathbf{T}$.
-Many downstream procedures for scRNA-seq data analysis depend primarily on the distances between cells, e.g., hierarchical clustering, nearest neighbour searches.
-Thus, a low MSE in the low-rank approximation is directly relevant to the quality of analyses based on the PCs.
+Moreover, recall that the distances between cells computed in the PC space are the same as the distances computed from $\mathbf{\tilde Y}_{k}$.
+Thus, minimizing the MSE of $\mathbf{\tilde Y}_k$ will also improve the accuracy of the PC-based distances with respect to the true distances computed from $\mathbf{T}$.
 
 We can also view the choice of $k$ as a compromise between bias and precision.
-At the largest value of $k$, there is no bias as $E(\mathbf{\tilde Y}_{(k)}) = E(\mathbf{Y}) = \mathbf{T}$, but precision is poor due to the presence of high-dimensional noise.
+At the largest value of $k$, there is no bias as $E(\mathbf{\tilde Y}_{k}) = E(\mathbf{Y}) = \mathbf{T}$, but precision is poor due to the presence of high-dimensional noise.
 As $k$ decreases, noise is removed and precision improves.
 However, this comes at the cost of introducing more bias when PCs capturing aspects of $\mathbf{T}$ are discarded.
-The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{(k)}) - \mathbf{T}||^2_F$ and the variance $||\mathbf{\tilde Y}_{(k)} - E(\mathbf{\tilde Y}_{(k)})||^2_F$, and provides a single overall measure of accuracy.
+The MSE is the sum of the bias $||E(\mathbf{\tilde Y}_{k}) - \mathbf{T}||^2_F$ and the variance $||\mathbf{\tilde Y}_{k} - E(\mathbf{\tilde Y}_{k})||^2_F$, and provides a single overall measure of accuracy.
 
 \section{Evaluations with simple simulations}
 
