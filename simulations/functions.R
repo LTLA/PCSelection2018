@@ -78,13 +78,15 @@ chooseNumber <- function(observed, SVD, tech.comp) {
 }
 
 #' Assessing each strategy to choose the number of PCs in simulations.
-assessChoices <- function(observed, truth, max.rank=50, approximate=FALSE) {
+assessChoices <- function(observed, truth, max.rank=50, approximate=FALSE, tech.comp=NULL) {
     dec.out <- decomposer(observed, nrank=max.rank, approximate=approximate)
     SVD <- dec.out$SVD
     center <- dec.out$center
 
     # Making choices.
-    tech.comp <- rowMeans((observed - truth)^2)
+    if (is.null(tech.comp)) { 
+        tech.comp <- rowMeans((observed - truth)^2)
+    } 
     choices <- chooseNumber(observed, SVD, tech.comp)
 
     # Determining the MSE at each number of components. 
@@ -174,7 +176,7 @@ simulateReal <- function(original, noise, prefix, iters=10) {
     for (recon.rank in c(10, 20, 30)) {
         for (it in seq_len(iters)) {
             sim <- generateReal(original, sim.vals$SVD, sim.vals$center, noise=noise, nrank=recon.rank)
-            out <- assessChoices(sim$observed, sim$truth, approximate=TRUE)
+            out <- assessChoices(sim$observed, sim$truth, approximate=TRUE, tech.comp=noise)
 
             is.first <- counter==1L && it==1L
             write.table(data.frame(Rank=recon.rank), file=scn.fname, append=!is.first, col.names=is.first, row.names=FALSE, quote=FALSE, sep="\t")
