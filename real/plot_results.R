@@ -4,6 +4,7 @@
 dir.create("pics", showWarnings=FALSE)
 all.files <- list.files("results", pattern="_scenarios.txt$", full=TRUE)
 decoder <- c('kolod'='mESC', 'pbmc4k'='PBMC')
+method.alias <- c(elbow="Elbow", gavish="GD", marchenko="MP", denoised="Summation", jackstraw="Jackstraw", parallel="Parallel")
 
 for (res in all.files) { 
     prefix <- sub("_[^_]+.txt$", "", res)
@@ -17,6 +18,7 @@ for (res in all.files) {
 
     out <- split(y.vals, current.scen[,1])
     means <- do.call(rbind, lapply(out, colMeans))
+    colnames(means) <- method.alias[colnames(means)]
     sds <- do.call(rbind, lapply(out, FUN=function(x) apply(x, 2, sd)/sqrt(nrow(x))))
 
     basefix <- basename(prefix)

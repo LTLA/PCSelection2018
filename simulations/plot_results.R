@@ -3,7 +3,7 @@
 
 dir.create("pics", showWarnings=FALSE)
 all.files <- list.files("results", pattern="_scenarios.txt$", full=TRUE)
-method.alias <- c(elbow="Elbow", gavish="GV", marchenko="MP", denoised="Summation", jackstraw="Jackstraw", parallel="Parallel")
+method.alias <- c(elbow="Elbow", gavish="GD", marchenko="MP", denoised="Summation", jackstraw="Jackstraw", parallel="Parallel")
 
 ################################################
 
