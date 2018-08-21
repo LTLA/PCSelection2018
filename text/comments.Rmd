@@ -1,0 +1,76 @@
+---
+title: Side notes and comments on PC selection
+author: Aaron Lun
+output:
+  BiocStyle::html_document
+---
+
+# Motivating the summation method
+
+## Why is biology in the first few PCs?
+
+We assume that the biological signal is wholly captured by the first few PCs. 
+This is based on the fact that biological processes will generate non-zero covariance between multiple genes that are involved in those processes. 
+If the loading vector is parallel to one of the basis vectors of the biological subspace, it will explain a component of the variance for every related gene. 
+When summed across all genes, this will explain a large proportion of the total variance in the data set.
+
+In contrast, technical noise should be mostly present in the later PCs. 
+This is because technical noise is expected to be random and uncorrelated across genes. 
+Any one loading vector can only explain the variance for a single gene (or a few, in cases with many genes where non-zero correlations occur by chance). 
+Thus, each vector should only explain a small proportion of the variance.
+
+## Justifying the lower bound in summation
+
+The choice of $k$ is a lower bound as it assumes that the first $k$ PCs contain _only_ biological variability.
+This will not be true as, even for the earliest PCs, the rotation vector will capture some aspect of the technical noise that happens to be parallel to the biological subspace.
+Thus, the variance explained by these PCs will contain a non-zero technical component.
+Conversely, some of the biological variability must be explained by later PCs, as it cannot be fully accounted for in the first $k$ PCs.
+While an accurate estimate of the rank of the underlying biological subspace would be preferable, a lower bound is still useful for denoising purposes,
+as it specifies the minimum number of PCs that should be retained.
+
+When the technical noise is high, the loading vector can be skewed to capture the largest components of the noise.
+This means that the earlier PCs tend to have the largest technical components, even though they also capture the biological signal.
+Such an effect will increase the discrepancy between our choice of $k$ and the ``true'' number of PCs that needs to be retained to preserve the biological variability.
+Of course, it is debatable whether obtaining the true number of PCs is desirable for noisy data, as this will reduce the effectiveness of denoising and dimensionality reduction. 
+
+# An alternative to summation for a tighter bound
+
+If we weaken the assumption that the technical component is zero in the first $k$ PCs, we might obtain a more suitable choice for the number of PCs.
+Assume that the first $k$ PCs contain the entirety of the biological signal, but also contribute at least
+
+$$
+    k \sigma^2_{k+1} 
+$$
+
+to the total technical variance in the data. 
+Here, we assume that the technical component explained by a PC is at least as large as that of any later PC (such as the $k+1$^th^ PC).
+This is generally reasonable in noisy data where the loading vectors for early PCs are skewed by random noise.
+Combined with the noise in the later PCs, the total technical variance must be at least
+
+$$
+    k \sigma^2_{k+1} + \sum_{l=k+1}^N \omega^2_l \;.
+$$
+
+One could then choose the smallest $k$ that satisfies
+
+$$
+    k \sigma^2_{k+1} + \sum_{l=k+1}^K \sigma^2_l \le \omega^2_t  
+$$
+
+to obtain a more accurate lower bound on $k$ that preserves biological signal.
+
+In practice, this approach tends to yield very large $k$, which defeats the purpose of denoising and dimensionality reduction.
+Moreover, it can be unstable with small changes in $\sigma^2_t$ resulting in large changes to the chosen $k$.
+This is because the gradient with respect to $k$ of the LHS of the above inequality can be very small.
+For the most extreme case where all $s^2_l$ are very similar, we could obtain near-identical LHS values for a range of $k$.
+By comparison, the original approach has a LHS that is supralinear with respect to $k$, such that a well-defined choice of $k$ can be obtained for any $\sigma^2_t$.
+
+# Use of summation with multi-batch experiments
+
+Summation can still be applied on batch-corrected data provided that an overall estimate of the technical component is available.
+Such an estimate can be obtained using the `combineVar` function after modelling the mean-variance trend within each batch, 
+e.g., to account for differences in spike-in abundance across batches.
+Another requirement is that the batch correction does not change the residuals within each batch.
+Any such distortion of the residuals this would alter the variance estimate, and thus the contribution of technical noise in the corrected data.
+Acceptable batch correction methods include simple linear regression (via `removeBatchEffect`) without any empirical Bayes shrinkage of the variances;
+or `mnnCorrect` with a large `sigma` to enforce the use of global correction vectors.

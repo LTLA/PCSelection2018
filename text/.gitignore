@@ -5,3 +5,4 @@ main.log
 main.out
 main.pdf
 texput.log
+*.html
