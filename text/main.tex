@@ -386,7 +386,7 @@ or using the first few PCs, with $k$ chosen by the Gavish-Donoho method to remov
 \label{fig:bionoise}
 \end{figure}
 
-\section{Evaluations with real data-based simulations}
+\section{Testing with real data-based simulations}
 
 We generated log-normalized expression values from real scRNA-seq data by following a published workflow \cite{lun2016stepbystep}.
 We first removed low-quality cells with low total counts, low total numbers of detected features and high spike-in proportions \cite{mccarthy2017scater}.
@@ -397,16 +397,13 @@ We performed feature selection by only retaining endogenous genes with total var
 If spike-in transcripts were not available, we instead used mitochondrial proportions for quality control,
 and we estimated the technical component for each gene by assuming Poisson noise.  
 
-Given a log-normalized expression matrix $\mathbf{Z}$, we generated a $s$-rank approximation $\mathbf{\tilde Z}_{(s)}$ as described above.
-For the purpose of simulating data, we treated $\mathbf{\tilde Z}_{(s)}$ as the matrix of true signal.
-We then simulated the observed matrix $\mathbf{Y}'$ by computing $\mathbf{S} \circ (\mathbf{\tilde Z}_{(s)} - \mathbf{Z})$,
-where $\mathbf{S}$ is a random sign matrix of the same dimensions as $\mathbf{Z}$, i.e., each entry of $\mathbf{S}$ is independently sampled from $\{-1, 1\}$.
-This framework allows us to incorporate aspects of real biological structure from $\mathbf{Z}$ into the simulated data $\mathbf{Y}'$.
-By only changing the sign of the residuals $\mathbf{\tilde Z}_{(s)} - \mathbf{Z}$, we also avoid making strong assumptions about the distribution of the noise.
-In particular, we can recapitulate the effects of discreteness and observation-specific variances more accurately.
-As the true rank of $E(\mathbf{Z})$ is not known, we repeated these simulations using $s$ from 10 to 30.
-
-% Also ensures that $E(\mathbf{Y}) = \mathbf{\tilde Z}_{(s)}$;
+Given a log-normalized expression matrix $\mathbf{Z}$, we generated a $s$-rank approximation $\mathbf{\tilde Z}_{s}$ as described above.
+For the purpose of simulating data, we treated $\mathbf{\tilde Z}_{s}$ as the matrix of true signal.
+We then created the observed matrix $\mathbf{Y}'$ by computing $\mathbf{\tilde Z}_{s} + \mathbf{S}$, where $\mathbf{S}$ is a matrix of the same dimensions as $\mathbf{Z}$.
+Each row of $\mathbf{S}$ consists of values independently sampled from a Normal distribution with mean zero and variance equal to the estimated technical component for the corresponding gene.
+This strategy allows us to incorporate aspects of real biological structure and technical noise into our simulations.
+We then evaluated each method by computing the MSE for the chosen $k$ with respect to $\mathbf{\tilde Z}_s$.
+As the true rank of $E(\mathbf{Z})$ is not known, we repeated the simulations using $s$ from 10 to 30.
 
 We used our framework to generate simulated data from a mouse embryonic stem cell (mESC) data set \cite{kolod2015single} and a droplet-based data set using peripheral blood mononuclear cells (PBMCs) \cite{zheng2017massively}.
 For the mESC data set, we only considered the single batch in which spike-ins were added, involving approximately 200 cells.
@@ -427,6 +424,31 @@ The height of each bar represents the average fold-increase in the MSE from 10 s
 Error bars represent one standard error.}
 \label{fig:real}
 \end{figure}
+
+We also examined the behaviour of each method on the original data $\mathbf{Z}$.
+It is difficult to perceive any consistent pattern, though in general, 
+methods that require the magnitude of technical noise (i.e., summation, Gavish-Donoho, Marchenko-Pastur) retain more PCs than the others (Table~\ref{tab:real}).
+This is attributable to the fact that random biological noise is retained, requiring more PCs to account for the greater intrinsic dimensionality.
+The other methods do not distinguish between technical and biological noise and aim to remove both, resulting in retention of fewer PCs upon denoising.
+
+\begin{table}[btp]
+\caption{Number of PCs retained by each method on real scRNA-seq data, set to a maximum of 50 for computational efficiency (capped choices denoted by *).}
+\label{tab:real}
+\begin{center}
+\begin{tabular}{l r@{}l r@{}l}
+\hline
+\textbf{Method} & \textbf{mESC} & & \textbf{PBMC} \\
+\hline
+Summation & 24 & & 10 & \\
+Jackstraw & 4 & & 8 & \\
+GD & 6 & & 50 & * \\
+MP & 50 &* & 50 & * \\
+Parallel & 9 & & 10 & \\
+Elbow & 4 & & 4  & \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
 
 \section{Discussion}
 Here, we have performed a variety of simulations to assess different strategies for choosing the number of PCs to retain in scRNA-seq data analysis.
