@@ -243,14 +243,14 @@ and $w^2_g$ of 1 (i.e., constant variance) or sampled from a $\mbox{Gamma}(2,2)$
 We also repeated the simulations where, instead of assigning each cell to a single subpopulation to create clusters,
 we created trajectories by treating each cell as a linear combination of two randomly chosen subpopulations with mixing proportion sampled from a $\mbox{Uniform}(0, 1)$ distribution.
 
-We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{(k)}$ from the $\mathbf{T}$ matrix containing the known signal for each cell.
-For each cell, entries of $\mathbf{T}$ were set to the mean expression vector of the assigned subpopulation (i.e., $\mu_{gp}$) for the cluster simulations.
-For trajectories, entries of $\mathbf{T}$ were defined as the known linear combination of the two chosen subpopulations for each cell.
-In each simulation scenario, we determined lowest MSE obtained by testing all possible values of $k$.
+We evaluated each choice of the number of PCs by computing the MSE of the low-rank approximation $\mathbf{\tilde Y}_{k}$ from the $\mathbf{T}$ matrix containing the known signal for each cell.
+For each cell, the corresponding column of $\mathbf{T}$ was defined as the mean expression vector of the assigned subpopulation (i.e., $\mu_{gp}$) for the cluster simulations.
+For trajectories, each column of $\mathbf{T}$ was defined as the known linear combination of the two chosen subpopulations for each cell.
+In each simulation scenario, we determined the optimal (i.e., lowest) MSE by testing all possible values of $k$.
 We then reported the results for each method in terms of fold-increases from the optimal MSE.
 For the technical summation method, we estimated $\omega^2_t$ as $||\mathbf{Y} - \mathbf{T}||^2_F$.
 (In practice, $\mathbf{T}$ is neither known nor necessary for estimating the technical components, but we have used it here for simplicity.)
-For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2_t/G$.
+For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2_t/G$, assuming i.i.d.\ noise across genes.
 
 \subsection{Simulation results}
 Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
