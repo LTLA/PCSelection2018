@@ -253,15 +253,13 @@ For the technical summation method, we estimated $\omega^2_t$ as $||\mathbf{Y} -
 For the Gavish-Donoho and Marchenko-Pastur methods, the average variance of the noise was defined as $\omega^2_t/G$, assuming i.i.d.\ noise across genes.
 
 \subsection{Simulation results}
-Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}). 
-The jackstraw method also performs well, recovering the optimal MSE more frequently than summation but exhibiting a heavier tail of large MSEs.
-Their different suboptimalities reflect the theoretical differences between the two approaches.
-Technical summation consistently yields $k$ below the true rank of $\mathbf{T}$, which likely contributes to a systematic shift from the optimal MSE in some scenarios.
-In comparison, the jackstraw tests for associations between gene expression and each PC.
-This will often retain more PCs than the true rank of $\mathbf{T}$ (denoted $r$) in noisy data sets.
-Specifically, the subspace defined by the first $r$ rotation vectors is not equivalent to the $r$ basis vectors of $\mathbf{T}$ due to the noise.
-Genuine signal will then be captured by later PCs, resulting in significant associations.
-The jackstraw is also subject to random type I errors that introduce further variation in $k$ across iterations.
+Across all simulation scenarios, technical summation performs consistently well with MSEs close to or at the optimum (Figure~\ref{fig:all}).
+In fact, we see that the MSE from summation is never greater than twice the optimum in any scenario.
+This motivates its general use for scRNA-seq data as part of the \textit{scran} analysis pipeline.
+On the other hand, technical summation returns the optimum MSE less frequently than some of the other methods.
+This reflects the fact that summation consistently yields a choice of $k$ below the true rank of $\mathbf{T}$ (denoted $r$), which likely contributes to a systematic shift from the optimal MSE in some scenarios where the true rank is the optimal choice.
+(Of course, there is no guarantee that $r$ is the optimal choice in all scenarios.
+Nonetheless, it is instructive to consider the ability of methods to recover $r$ when it is optimal.) 
 
 \begin{figure}
 \begin{center}
@@ -305,12 +303,18 @@ Bars and abbreviations are as described in Figure~\ref{fig:all}.
 The use of the Marchenko-Pastur limit also exhibits poor performance, which can be traced back to its underying assumptions.
 Like the Gavish-Donoho method, the application of the Marchenko-Pastur law requires the assumption of i.i.d.\ noise.
 Violations of this assumption lead to increased MSE when the limit is used to choose number of PCs (Figure~\ref{fig:noise}).
-However, even when the i.i.d.\ assumption holds, we observe inflated MSEs compared to the other methods.
-This is driven by the same phenomenon that affects the jackstraw, 
-i.e., the $r$ basis vectors of $\mathbf{T}$ do not define the same subspace as the first $r$ rotation vectors in noisy datasets.
+However, even when the i.i.d.\ assumption holds, we observe inflated MSEs compared to the optimum.
+This is driven by the fact that the $r$ basis vectors of $\mathbf{T}$ do not define the same subspace as the first $r$ rotation vectors in noisy datasets.
 Instead, some of the variance from the true signal will be captured by the $>r$ rotation vectors.
 This increases the later singular values above the Marchenko-Pastur limit and generally results in an overstatement of the number of PCs to retain. 
-Parallel analysis is subject to the same effect, retaining more PCs than necessary and yielding a long tail of large MSEs.
+
+Of the methods that do not require an estimate of the technical noise, the jackstraw performs slightly better than parallel analysis.
+However, both have a long tail of large MSEs, mostly caused by the retention of more PCs than the optimal choice.
+This is attributable to the same effect described for the Marchenko-Pastur method.
+Recall that the jackstraw tests for associations between gene expression and each PC.
+In noisy data sets, genuine signal is captured by later PCs and results in significant associations for more than $r$ PCs.
+The same effect applies to parallel analysis where the variance explained by later PCs is increased above the permutations.
+The jackstraw is also subject to random type I errors that introduce further variation in $k$ across iterations.
 
 Elbow detection from the scree plot has large MSEs when the true signal is weak relative to the noise (Figure~\ref{fig:bio}).
 This occurs when the subpopulation means are weakly separated, either due to small differences in $\mu_{gp}$ or low $P$.
