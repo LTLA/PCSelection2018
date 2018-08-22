@@ -18,3 +18,15 @@ sbatch << EOT
 
 echo 'source("run_pbmc4k.R")' | ${R} --slave --vanilla
 EOT
+
+# Submitting the Kolodziejczyk simulations.
+
+sbatch << EOT
+#!/bin/bash
+#SBATCH -o logs/out-kolod
+#SBATCH -e logs/err-kolod
+#SBATCH -n 1
+#SBATCH --mem 16000
+
+echo 'source("run_kolod.R")' | ${R} --slave --vanilla
+EOT
