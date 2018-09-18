@@ -1,7 +1,7 @@
 # Discussion of PC selection methods for scRNA-seq data
 
 This repository contains some scripts to assess different methods of choosing the number of PCs to retain.
-The `text` directory contains LaTeX files for the report, a compiled PDF of which can be found [here](https://jmlab-gitlab.cruk.cam.ac.uk/aaron/technical-reports/raw/master/pc-selection.pdf).
+The `text` directory contains LaTeX files for the report, a compiled PDF of which can be found [here](https://jmlab-gitlab.cruk.cam.ac.uk/miscellaneous/technical-reports/raw/master/pc-selection.pdf).
 The `simulations` directory contains R scripts for performing the basic simulations:
 
 - `functions.R`, a central R script containing definitions of useful functions for the simulations.
